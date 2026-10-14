@@ -24,68 +24,115 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;600;700&family=Nanum+Myeongjo:wght@700;800&family=Nanum+Pen+Script&display=swap">
 <style>
-/* 레이아웃: 왼쪽 4단계 작업 패널 + 오른쪽 고정 미리보기. 모바일에서는 미리보기 → 패널 순으로 쌓임 */
+/* 구성: 소개(웰컴) 화면 → 제작 화면(왼쪽 단계 패널 + 오른쪽 미리보기). 디자인: 리퀴드 글래스 — 은은한 그라데이션 위 반투명 유리 */
 :root{
-  --bg:#f3f4f1; --panel:#ffffff; --ink:#1c2422; --muted:#5f6a66; --line:#dde1dc;
-  --accent:#1f5a4a; --accent-ink:#ffffff; --pop:#e3a21a; --chip:#eef1ec;
+  --base:#edf2ef; --blob1:#bfe8d6; --blob2:#ffd9bd; --blob3:#fff0b5; --blob4:#d8e3ff;
+  --glass:rgba(255,255,255,.56); --glass-hi:rgba(255,255,255,.80); --glass-line:rgba(255,255,255,.88);
+  --ink:#16201d; --muted:#55625d; --line:rgba(22,32,29,.11);
+  --accent:#1f5a4a; --accent-2:#2e7c64; --accent-ink:#ffffff; --pop:#e3a21a; --chip:rgba(255,255,255,.62);
+  --shadow:0 12px 34px rgba(24,60,48,.11),0 1px 2px rgba(24,60,48,.06); --hl:rgba(255,255,255,.65);
+  --panel:var(--glass-hi); --bg:var(--base); --err:#b8382b;
+  --r-lg:22px; --r-md:14px;
   --f-display:"Black Han Sans","IBM Plex Sans KR",system-ui,sans-serif;
   --f-ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#141a18; --panel:#1c2421; --ink:#e8ece9; --muted:#9aa6a1; --line:#2d3834;
-  --accent:#5fbfa0; --accent-ink:#0f1513; --pop:#f0b93a; --chip:#24302c; color-scheme:dark}}
+  --base:#0c1311; --blob1:rgba(46,124,100,.55); --blob2:rgba(150,86,42,.42); --blob3:rgba(128,104,28,.32); --blob4:rgba(62,72,150,.40);
+  --glass:rgba(28,38,35,.55); --glass-hi:rgba(34,46,42,.78); --glass-line:rgba(255,255,255,.13);
+  --ink:#eaf0ed; --muted:#a2b2ab; --line:rgba(255,255,255,.11);
+  --accent:#5fbfa0; --accent-2:#86d6bb; --accent-ink:#0b1311; --pop:#f0b93a; --chip:rgba(255,255,255,.07);
+  --shadow:0 14px 36px rgba(0,0,0,.40),0 1px 2px rgba(0,0,0,.3); --hl:rgba(255,255,255,.10); --err:#ff8a7a; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#141a18; --panel:#1c2421; --ink:#e8ece9; --muted:#9aa6a1; --line:#2d3834;
-  --accent:#5fbfa0; --accent-ink:#0f1513; --pop:#f0b93a; --chip:#24302c; color-scheme:dark}
+  --base:#0c1311; --blob1:rgba(46,124,100,.55); --blob2:rgba(150,86,42,.42); --blob3:rgba(128,104,28,.32); --blob4:rgba(62,72,150,.40);
+  --glass:rgba(28,38,35,.55); --glass-hi:rgba(34,46,42,.78); --glass-line:rgba(255,255,255,.13);
+  --ink:#eaf0ed; --muted:#a2b2ab; --line:rgba(255,255,255,.11);
+  --accent:#5fbfa0; --accent-2:#86d6bb; --accent-ink:#0b1311; --pop:#f0b93a; --chip:rgba(255,255,255,.07);
+  --shadow:0 14px 36px rgba(0,0,0,.40),0 1px 2px rgba(0,0,0,.3); --hl:rgba(255,255,255,.10); --err:#ff8a7a; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-ui);
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
-header{max-width:1240px;margin:0 auto 18px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-header h1{font:400 30px/1 var(--f-display);margin:0;letter-spacing:.5px}
-header h1 b{color:var(--pop);font-weight:400}
-header p{margin:0;color:var(--muted);font-size:14px}
-.app{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:22px;align-items:start}
-.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
-.step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
-.step h2{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
-.step h2 .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px}
+body{background:var(--base);color:var(--ink);font:15px/1.55 var(--f-ui);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+.bgfx{position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+  radial-gradient(42vmax 42vmax at 6% 10%,var(--blob1),transparent 62%),
+  radial-gradient(38vmax 38vmax at 94% 14%,var(--blob2),transparent 62%),
+  radial-gradient(46vmax 46vmax at 82% 94%,var(--blob3),transparent 62%),
+  radial-gradient(40vmax 40vmax at 12% 90%,var(--blob4),transparent 62%),var(--base)}
+.glass,.step,.stage,.warn,.nav,.feat,.how,.final,.appbar{background:var(--glass);
+  -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);
+  border:1px solid var(--glass-line);box-shadow:var(--shadow),inset 0 1px 0 var(--hl)}
+
+/* ── 공통 컨트롤 ── */
 .hint{font-size:12.5px;color:var(--muted);margin:0}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-button,.btn{font:600 14px var(--f-ui);border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:8px;padding:9px 13px;cursor:pointer}
-button:hover{border-color:var(--accent)}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--pop);outline-offset:2px}
-button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-button.big{width:100%;padding:13px;font-size:16px}
-button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button,.btn{font:600 14px var(--f-ui);border:1px solid var(--glass-line);background:var(--chip);color:var(--ink);border-radius:12px;padding:9px 14px;cursor:pointer;
+  box-shadow:inset 0 1px 0 var(--hl),0 1px 2px rgba(0,0,0,.04);transition:transform .12s ease,background .15s ease,box-shadow .15s ease;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+button:hover,.btn:hover{background:var(--glass-hi)}
+button:active,.btn:active{transform:scale(.97)}
+button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--pop);outline-offset:2px}
+button.primary,.btn.primary,button[aria-pressed="true"]{background:linear-gradient(180deg,var(--accent-2),var(--accent));color:var(--accent-ink);border-color:transparent;
+  box-shadow:0 8px 20px rgba(31,90,74,.28),inset 0 1px 0 rgba(255,255,255,.32)}
+button.big{width:100%;padding:14px;font-size:16px;border-radius:16px}
 button:disabled{opacity:.55;cursor:wait}
-.drop{border:1.5px dashed var(--line);border-radius:10px;padding:16px;text-align:center;color:var(--muted);cursor:pointer}
-.drop.on{border-color:var(--accent);color:var(--ink)}
-.drop strong{color:var(--ink)}
 .sl{display:grid;grid-template-columns:70px minmax(0,1fr) 38px;gap:10px;align-items:center;font-size:13.5px}
 .sl output{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
 input[type=range]{width:100%;accent-color:var(--accent)}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--glass-hi);color:var(--ink);width:100%}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.status{font-size:13px;color:var(--muted);min-height:1em}
+.status.err{color:var(--err)}
+
+/* ── 제작 화면 ── */
+.appbar{max-width:1240px;margin:0 auto 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:999px;padding:8px 8px 8px 18px}
+.logo{font:400 24px/1 var(--f-display);letter-spacing:.3px;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:9px}
+.logo b{color:var(--pop);font-weight:400}
+.logo .mark{width:28px;height:28px;flex:none}
+.appbar .sub{color:var(--muted);font-size:13.5px;flex:1;min-width:0}
+.appbar .btn{border-radius:999px;padding:8px 14px;font-size:13px}
+.app{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:22px;align-items:start}
+.panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+.step{border-radius:var(--r-lg);padding:18px;display:flex;flex-direction:column;gap:12px}
+.step h2{margin:0;font-size:15.5px;font-weight:700;display:flex;align-items:center;gap:9px}
+.step h2 .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,var(--accent-2),var(--accent));color:var(--accent-ink);font-size:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.drop{border:1.5px dashed var(--line);border-radius:16px;padding:18px;text-align:center;color:var(--muted);cursor:pointer;background:var(--chip);transition:background .15s}
+.drop.on,.drop:hover{border-color:var(--accent);color:var(--ink);background:var(--glass-hi)}
+.drop strong{color:var(--ink)}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .bggrid{max-height:330px;overflow-y:auto;padding:3px;margin:-3px}
-.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
-.chips button{flex:none;padding:6px 11px;font-size:13px;border-radius:99px}
-.tile img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}
-.tile{padding:0;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;background:var(--panel)}
-.tile canvas{display:block;width:100%;aspect-ratio:1/1;height:auto}
-.tile span{font-size:11.5px;padding:4px 2px;font-weight:600}
-.tile[aria-pressed="true"]{outline:2.5px solid var(--pop);outline-offset:1px;background:var(--panel);color:var(--ink)}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
-input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
-.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
-.status{font-size:12.5px;color:var(--muted);min-height:1em}
-.status.err{color:#c0392b}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px;scrollbar-width:none}
+.chips button{flex:none;padding:6px 12px;font-size:13px;border-radius:999px}
+.tile{padding:0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;background:var(--glass-hi)}
+.tile img,.tile canvas{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;height:auto}
+.tile span{font-size:11.5px;padding:5px 2px;font-weight:600}
+.tile[aria-pressed="true"]{outline:2.5px solid var(--pop);outline-offset:1px;background:var(--glass-hi);color:var(--ink);box-shadow:none}
 .preview{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);display:flex;flex-direction:column;gap:12px;min-width:0}
-.stage{background:repeating-conic-gradient(var(--chip) 0 25%,var(--panel) 0 50%) 0 0/22px 22px;border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;place-items:center}
-#poster{max-width:100%;max-height:calc(100vh - 190px);height:auto;box-shadow:0 10px 30px rgba(0,0,0,.18);border-radius:2px}
-.meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.stage{border-radius:var(--r-lg);padding:20px;display:grid;place-items:center}
+#poster{max-width:100%;max-height:calc(100vh - 200px);height:auto;box-shadow:0 18px 40px rgba(0,0,0,.22);border-radius:3px}
+.meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);padding:0 6px}
+.cutbtns{display:flex;flex-direction:column;gap:8px}
+.cut-ai{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:13px 16px;border-radius:16px;text-align:left}
+.cut-ai b{font-size:16px}
+.cut-ai small{font-weight:400;font-size:12.5px;color:var(--muted)}
+.cut-ai[aria-pressed="true"] small{color:inherit;opacity:.85}
+.cut-ai:not([aria-pressed="true"]){border:1.5px solid var(--accent)}
 .cutopts{display:flex;flex-direction:column;gap:10px}
-.foot{max-width:1240px;margin:36px auto 0;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.8}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;cursor:pointer}
+.check input{width:20px;height:20px;margin-top:1px;accent-color:var(--accent);flex:none}
+.check small{font-weight:400;color:var(--muted);font-size:12.5px}
+.warn{border-radius:16px;padding:13px 15px;display:flex;flex-direction:column;gap:10px;font-size:14px;border-color:var(--pop)}
+.editor{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;gap:10px;background:var(--glass-hi);
+  -webkit-backdrop-filter:blur(30px) saturate(160%);backdrop-filter:blur(30px) saturate(160%);
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.ed-bar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.ed-bar .sl{grid-template-columns:52px 120px 34px;flex:none}
+.ed-stage{flex:1;min-height:0;overflow:auto;border:1px solid var(--glass-line);border-radius:16px;
+  background:repeating-conic-gradient(rgba(127,127,127,.16) 0 25%,rgba(255,255,255,.10) 0 50%) 0 0/20px 20px;display:flex;padding:8px}
+#edCanvas{display:block;flex:none;margin:auto;touch-action:none;cursor:crosshair;max-width:none}
+.ed-title{font-weight:700;font-size:15px;margin:0}
+
+/* ── 하단 정보 ── */
+.foot{max-width:1240px;margin:44px auto 0;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.8}
 .foot .brandline{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);font-weight:600;margin-bottom:8px}
 .foot .brandline .lab{font-weight:400;color:var(--muted)}
 .foot .links{display:flex;flex-wrap:wrap;gap:4px 14px;margin-bottom:10px}
@@ -93,43 +140,146 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
 .foot .links a:hover{text-decoration:underline}
 .foot .links .strong{font-weight:700}
 .foot p{margin:10px 0 0}
-.cutbtns{display:flex;flex-direction:column;gap:8px}
-.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;cursor:pointer}
-.check input{width:20px;height:20px;margin-top:1px;accent-color:var(--accent);flex:none}
-.check small{font-weight:400;color:var(--muted);font-size:12.5px}
-.warn{background:var(--panel);border:1.5px solid var(--pop);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:14px}
-@media (max-width:860px){ .warn{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6;box-shadow:0 8px 24px rgba(0,0,0,.2)} }
-.cut-ai{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border:2px solid var(--accent);text-align:left}
-.cut-ai b{font-size:16px}
-.cut-ai small{font-weight:400;font-size:12.5px;color:var(--muted)}
-.cut-ai[aria-pressed="true"] small{color:inherit;opacity:.85}
-.editor{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;gap:10px;
-  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.ed-bar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
-.ed-bar .sl{grid-template-columns:52px 120px 34px;flex:none}
-.ed-stage{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:10px;
-  background:repeating-conic-gradient(var(--chip) 0 25%,var(--panel) 0 50%) 0 0/20px 20px;display:flex;padding:8px}
-#edCanvas{display:block;flex:none;margin:auto;touch-action:none;cursor:crosshair;max-width:none}
-.ed-title{font-weight:700;font-size:15px;margin:0}
-.cutopts[hidden]{display:none!important}
+
+/* ── 소개(웰컴) 화면 ── */
+.welcome{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(48px,8vw,96px)}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:12px;border-radius:999px;padding:8px 8px 8px 18px}
+.nav .btn{border-radius:999px;padding:9px 16px}
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(24px,4vw,56px);align-items:center}
+.eyebrow{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--accent);background:var(--chip);border:1px solid var(--glass-line);border-radius:999px;padding:5px 12px;margin-bottom:18px}
+.hero h1{font:400 clamp(40px,6.2vw,72px)/1.1 var(--f-display);letter-spacing:-.5px;margin:0;text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.lead{font-size:clamp(16px,1.55vw,19px);color:var(--muted);max-width:32em;margin:20px 0 28px;line-height:1.7}
+.cta{display:flex;gap:10px;flex-wrap:wrap}
+.btn-xl{padding:16px 26px!important;font-size:17px!important;border-radius:999px!important}
+.trust{display:flex;gap:8px 18px;flex-wrap:wrap;margin:22px 0 0;padding:0;list-style:none;font-size:13.5px;color:var(--muted)}
+.trust li{display:flex;align-items:center;gap:6px}
+.trust svg{width:16px;height:16px;color:var(--accent);flex:none}
+.fan{position:relative;height:clamp(380px,44vw,560px)}
+.fan::before{content:"";position:absolute;inset:8% 6%;border-radius:40px;background:var(--glass);border:1px solid var(--glass-line);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:var(--shadow),inset 0 1px 0 var(--hl)}
+.fan canvas{position:absolute;width:44%;height:auto;aspect-ratio:1240/1754;border-radius:5px;box-shadow:0 26px 50px rgba(0,0,0,.28);background:var(--glass-hi);transition:transform .4s ease}
+.fan canvas:nth-child(1){left:6%;top:16%;transform:rotate(-8deg)}
+.fan canvas:nth-child(2){left:28%;top:4%;z-index:2;width:46%;transform:rotate(1deg)}
+.fan canvas:nth-child(3){right:5%;top:17%;transform:rotate(8deg)}
+.fan:hover canvas:nth-child(1){transform:rotate(-11deg) translateX(-8px)}
+.fan:hover canvas:nth-child(3){transform:rotate(11deg) translateX(8px)}
+.sec-title{font:400 clamp(28px,3.4vw,40px)/1.2 var(--f-display);margin:0 0 8px;text-wrap:balance}
+.sec-sub{color:var(--muted);margin:0 0 26px;font-size:16px}
+.features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.feat{border-radius:var(--r-lg);padding:26px}
+.feat .ic{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(160deg,var(--accent-2),var(--accent));color:var(--accent-ink);box-shadow:0 8px 18px rgba(31,90,74,.25),inset 0 1px 0 rgba(255,255,255,.3)}
+.feat .ic svg{width:24px;height:24px}
+.feat h3{font-size:19px;margin:18px 0 8px}
+.feat p{margin:0;color:var(--muted);line-height:1.7}
+.how{border-radius:28px;padding:clamp(24px,4vw,44px)}
+.steps4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0;padding:0;list-style:none;counter-reset:s}
+.steps4 li{counter-increment:s;background:var(--chip);border:1px solid var(--glass-line);border-radius:18px;padding:20px}
+.steps4 li::before{content:counter(s);display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--pop);color:#1c1503;font-weight:700;font-size:14px;margin-bottom:12px}
+.steps4 b{display:block;font-size:16px;margin-bottom:4px}
+.steps4 span{color:var(--muted);font-size:14px;line-height:1.6}
+.final{border-radius:28px;padding:clamp(28px,5vw,52px);text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px}
+.final .sec-title{margin:0}
+
 @media (max-width:860px){
-  body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
   .app{grid-template-columns:minmax(0,1fr)}
   .preview{position:static;order:-1}
   .stage{padding:10px}
   #poster{max-height:62vh}
-  #dlBtn{position:fixed;left:0;right:0;bottom:0;z-index:5;border-radius:0;margin:0;
-    padding:14px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
-    box-shadow:0 -6px 20px rgba(0,0,0,.18)}
-  header h1{font-size:26px}
+  #appView{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+  #dlBtn{position:fixed;left:0;right:0;bottom:0;z-index:5;border-radius:20px 20px 0 0;margin:0;
+    padding:15px max(16px,env(safe-area-inset-right,0px)) calc(15px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+    box-shadow:0 -8px 24px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.3)}
+  .warn{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:6}
+  .appbar .sub{display:none}
+  .logo{font-size:22px}
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .fan{height:clamp(320px,92vw,440px);order:-1}
+  .features{grid-template-columns:minmax(0,1fr)}
+  .steps4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cta .btn{flex:1 1 100%}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<header>
-  <h1>찰칵<b>포스터</b></h1>
-  <p>메뉴 사진 한 장 → 매장에 붙일 포스터. 사진은 서버로 전송되지 않고 이 기기 안에서만 처리돼요.</p>
+<div class="bgfx" aria-hidden="true"></div>
+
+<!-- 소개(웰컴) 화면 -->
+<section class="welcome" id="welcome" aria-label="찰칵포스터 소개">
+  <nav class="nav">
+    <a class="logo" href="#" data-go="welcome"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" style="fill:var(--accent)"/><circle cx="16" cy="16" r="8.6" fill="none" stroke="#fff" stroke-width="2.6"/><circle cx="16" cy="16" r="3.3" style="fill:var(--pop)"/></svg>찰칵<b>포스터</b></a>
+    <a class="btn primary" href="#make" data-go="app">포스터 만들기</a>
+  </nav>
+
+  <div class="hero">
+    <div>
+      <span class="eyebrow">사장님을 위한 메뉴 포스터 도구</span>
+      <h1>메뉴 사진 한 장이면<br><em>매장 포스터</em> 끝.</h1>
+      <p class="lead">사진을 올리면 AI가 음식만 깔끔하게 오려내고, 배경과 문구를 입혀 바로 붙일 수 있는 포스터로 만들어 드려요. 외주를 맡기지 않아도, 디자인을 몰라도 괜찮아요.</p>
+      <div class="cta">
+        <a class="btn primary btn-xl" href="#make" data-go="app">무료로 포스터 만들기</a>
+        <a class="btn btn-xl" href="#how">만드는 방법 보기</a>
+      </div>
+      <ul class="trust">
+        <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>회원가입 없이 바로</li>
+        <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>사진은 내 폰 밖으로 나가지 않아요</li>
+        <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3L13 4.5"/></svg>A4 인쇄용 · 인스타용</li>
+      </ul>
+    </div>
+    <div class="fan" id="fan" aria-label="완성 포스터 예시">
+      <canvas width="620" height="877" data-tpl="classic" data-bg="walnut" data-t='{"store":"카페 온기","menu":"토마토 바질 파스타","copy":"매일 아침 직접 끓이는 소스","price":"12,900원","badge":"NEW"}'></canvas>
+      <canvas width="620" height="877" data-tpl="bold" data-bg="pink" data-t='{"store":"오늘의 파스타","menu":"시그니처 토마토","copy":"점심 11시~2시 한정","price":"9,900원","badge":"오늘만"}'></canvas>
+      <canvas width="620" height="877" data-tpl="chalk" data-bg="chalk" data-t='{"store":"트라토리아 루나","menu":"포모도로 파스타","copy":"생토마토로 끓인 소스","price":"11,000원","badge":"BEST"}'></canvas>
+    </div>
+  </div>
+
+  <section aria-labelledby="featTitle">
+    <h2 class="sec-title" id="featTitle">외주 맡긴 듯한 포스터, 직접 3분이면</h2>
+    <p class="sec-sub">찰칵포스터가 사장님 대신 해 드리는 일</p>
+    <div class="features">
+      <article class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg></div>
+        <h3>음식만 쏙, AI 누끼</h3>
+        <p>AI가 사진에서 음식만 찾아 오려내요. 접시까지 살리고 싶거나 테두리가 아쉬우면 손가락으로 쓱쓱 다듬으면 돼요.</p>
+      </article>
+      <article class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 17h5"/><circle cx="12" cy="12" r="2.6"/></svg></div>
+        <h3>배경 30종 · 매장용 템플릿</h3>
+        <p>나무, 대리석, 계절 테마 같은 배경을 고르고 상호·메뉴·가격만 넣으면 매장에 바로 붙일 포스터가 완성돼요.</p>
+      </article>
+      <article class="feat">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+        <h3>사진은 내 폰 안에서만</h3>
+        <p>모든 작업이 사장님 기기 안에서 이루어져요. 메뉴 사진이 어디에도 올라가거나 저장되지 않으니 안심하고 쓰세요.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="how" id="how" aria-labelledby="howTitle">
+    <h2 class="sec-title" id="howTitle">이렇게 만들어요</h2>
+    <p class="sec-sub">휴대폰 하나로 처음부터 끝까지</p>
+    <ol class="steps4">
+      <li><b>사진 올리기</b><span>휴대폰으로 찍은 메뉴 사진을 그대로 올려요.</span></li>
+      <li><b>음식 오려내기</b><span>AI 누끼 한 번. 필요하면 손가락으로 다듬어요.</span></li>
+      <li><b>꾸미기</b><span>자동 보정, 배경, 템플릿, 문구를 골라요.</span></li>
+      <li><b>저장하고 붙이기</b><span>A4로 인쇄하거나 인스타에 바로 올려요.</span></li>
+    </ol>
+  </section>
+
+  <section class="final">
+    <h2 class="sec-title">오늘 메뉴, 오늘 포스터로</h2>
+    <p class="sec-sub" style="margin:0">신메뉴가 나온 날, 바로 만들어 붙이세요.</p>
+    <a class="btn primary btn-xl" href="#make" data-go="app">지금 만들어 보기</a>
+  </section>
+</section>
+
+<!-- 제작 화면 -->
+<div id="appView" hidden>
+<header class="appbar">
+  <a class="logo" href="#" data-go="welcome"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" style="fill:var(--accent)"/><circle cx="16" cy="16" r="8.6" fill="none" stroke="#fff" stroke-width="2.6"/><circle cx="16" cy="16" r="3.3" style="fill:var(--pop)"/></svg>찰칵<b>포스터</b></a>
+  <span class="sub">메뉴 사진 한 장으로 매장 포스터를 만들어요</span>
+  <a class="btn" href="#" data-go="welcome">서비스 소개</a>
 </header>
 
 <main class="app">
@@ -162,10 +312,10 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
         <div class="sl"><span>부드럽게</span><input type="range" id="rSoft" min="0" max="3" value="1"><output for="rSoft">1</output></div>
         <label class="check"><input type="checkbox" id="aiPlate"> <span>접시까지 포함<br><small>AI가 접시를 빼먹었을 때 켜세요. 아래 원 영역을 합쳐요.</small></span></label>
         <p class="hint">가장자리를 +로 올리면 안쪽으로 깎아서 남은 배경 테두리를 없애요. −는 반대로 넓혀요.</p>
-        <label class="f">AI 모델<select id="aiModel">
-          <option value="auto">자동 (폰은 빠름, PC는 고화질)</option>
-          <option value="isnet_quint8">빠름 · 약 40MB</option>
-          <option value="isnet_fp16">고화질 · 약 80MB</option></select></label>
+        <label class="f">오려내기 정밀도<select id="aiModel">
+          <option value="auto">자동 (기기에 맞게)</option>
+          <option value="isnet_quint8">빠르게</option>
+          <option value="isnet_fp16">더 정교하게</option></select></label>
       </div>
       <div class="cutopts" id="plateOpts">
         <div class="sl"><span>원 크기</span><input type="range" id="pSize" min="30" max="100" value="86"><output for="pSize">86</output></div>
@@ -189,7 +339,7 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
     <!-- 4. 배경 -->
     <div class="step">
       <h2><span class="n">4</span>배경 바꾸기</h2>
-      <p class="hint">배경 라이브러리: 미리 만들어 둔 배경이라 몇 번을 골라도 비용이 들지 않아요.</p>
+      <p class="hint">매장 분위기에 맞는 배경을 골라 보세요.</p>
       <div class="chips" id="bgCats" role="group" aria-label="배경 분류"></div>
       <div class="grid bggrid" id="bgGrid"></div>
       <div class="row">
@@ -222,7 +372,7 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
 
   <section class="preview" aria-label="미리보기">
     <div class="stage"><canvas id="poster" width="1240" height="1754" aria-label="포스터 미리보기"></canvas></div>
-    <div class="meta"><span id="dims">1240 × 1754 px · A4 150dpi</span><span id="renderInfo"></span></div>
+    <div class="meta"><span id="dims">A4 세로 · 인쇄용</span><span class="status" id="saveMsg" role="status"></span></div>
     <div class="warn" id="saveWarn" hidden role="alert">
       <span id="saveWarnText"></span>
       <div class="row"><button id="saveFill">입력하러 가기</button><button class="primary" id="saveAnyway">그대로 저장</button></div>
@@ -230,6 +380,7 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
     <button class="primary big" id="dlBtn">포스터 PNG 저장</button>
   </section>
 </main>
+</div>
 
 <footer class="foot" id="ft"></footer>
 <div class="editor" id="editor" hidden role="dialog" aria-label="누끼 직접 수정">
@@ -263,7 +414,7 @@ const S = {
   bg:'oak', bgCat:'전체', bgCustom:null, brand:'#c8452d',
   tpl:'classic', size:'a4', bgTouched:false,
 };
-const SIZES = { a4:[1240,1754,'A4 150dpi'], sq:[1080,1080,'인스타 피드'], story:[1080,1920,'인스타 스토리'] };
+const SIZES = { a4:[1240,1754,'A4 세로 · 인쇄용'], sq:[1080,1080,'정사각 · 인스타 피드'], story:[1080,1920,'세로 9:16 · 인스타 스토리'] };
 const $ = id => document.getElementById(id);
 const poster = $('poster');
 
@@ -453,8 +604,8 @@ let imglyMod=null;
 const isPhone=()=>matchMedia('(pointer:coarse)').matches;
 function aiModel(){ const v=$('aiModel').value; return v!=='auto'?v:(isPhone()?'isnet_quint8':'isnet_fp16'); }
 async function runAI(){
-  const st=$('aiStatus'), model=aiModel(), mb=model==='isnet_fp16'?80:40, btn=document.querySelector('[data-cut="ai"] b');
-  st.className='status'; st.textContent=`AI 모델을 불러오는 중… (처음 한 번만 약 ${mb}MB, 이후엔 바로 처리)`;
+  const st=$('aiStatus'), model=aiModel(), btn=document.querySelector('[data-cut="ai"] b');
+  st.className='status'; st.textContent='음식을 찾고 있어요… 처음 한 번은 준비하느라 조금 걸려요.';
   document.querySelectorAll('[data-cut]').forEach(b=>b.disabled=true); btn.textContent='✨ AI 처리 중…';
   try{
     if(!imglyMod) imglyMod=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
@@ -464,13 +615,13 @@ async function runAI(){
     sc.getContext('2d').drawImage(baseCanvas,0,0,sc.width,sc.height);
     const blob=await new Promise(r=>sc.toBlob(r,'image/jpeg',.92));
     const t0=performance.now();
-    const res=await imglyMod.removeBackground(blob,{ model, progress:(key,c,t)=>{ if(t) st.textContent=`AI 모델 받는 중 ${Math.round(c/t*100)}%`; } });
+    const res=await imglyMod.removeBackground(blob,{ model, progress:(key,c,t)=>{ if(t) st.textContent=`AI 준비 중 ${Math.round(c/t*100)}%`; } });
     S.aiRaw=await loadImg(URL.createObjectURL(res)); S.aiStamp=Date.now(); S.strokesBy.ai=[]; S.editVer++;
-    st.textContent=`AI 누끼 완료 (${model==='isnet_fp16'?'고화질':'빠름'} 모델, ${((performance.now()-t0)/1000).toFixed(1)}초) · 음식 부분에 맞춰 자동 보정도 다시 했어요. 아쉬운 테두리는 “직접 수정하기”로 다듬으세요.`;
+    st.textContent='음식만 오려냈어요. 아쉬운 테두리는 ✏️ 직접 수정하기로 다듬어 보세요.';
     S.cut='ai'; syncCut(); if(!S.adjManual) autoAdjust(); schedule();
   }catch(e){
     console.warn(e); st.className='status err';
-    st.textContent='AI 누끼를 불러오지 못했어요. 인터넷 연결을 확인해 주세요. (claude.ai 링크에서는 보안 제한으로 안 돼요) 지금은 “접시 원형으로 오리기”를 써 주세요.';
+    st.textContent='AI 오려내기를 시작하지 못했어요. 인터넷 연결을 확인하거나 ‘접시 원형으로 오리기’를 써 보세요.';
     S.cut=S.aiRaw?'ai':'plate'; syncCut(); schedule();
   }finally{ document.querySelectorAll('[data-cut]').forEach(b=>b.disabled=false); btn.textContent='✨ AI 누끼'; }
 }
@@ -671,8 +822,8 @@ async function render(){
     const t=texts(); await ensureFonts(t);
     const x=poster.getContext('2d'); x.clearRect(0,0,W,H); x.drawImage(getBg(S.bg,W,H),0,0);
     T[S.tpl].draw(x,W,H,t,bgTone(S.bg));
-    $('dims').textContent=`${W} × ${H} px · ${label}`; $('renderInfo').textContent=`기기 안 처리 ${Math.round(performance.now()-t0)}ms · 서버 비용 0원`;
-  }catch(e){ console.error(e); $('renderInfo').textContent='미리보기를 그리지 못했어요: '+e.message; }
+    $('dims').textContent=label;
+  }catch(e){ console.error(e); $('saveMsg').textContent='미리보기를 그리지 못했어요. 새로고침해 주세요.'; }
   rendering=false; if(again){ again=false; schedule(); }
 }
 
@@ -747,7 +898,7 @@ async function savePoster(){
   const done=()=>{ btn.disabled=false; btn.textContent='저장했어요 ✓ 다시 저장'; };
   if(dl){ // claude.ai 링크(모바일 포함): 저장 확인창 → 폰에서는 공유/사진 저장
     try{ await dl.save({filename:name,data:blob}); done(); }
-    catch(e){ btn.disabled=false; if(e&&e.code!=='declined') $('renderInfo').textContent='저장하지 못했어요. 잠시 후 다시 눌러 주세요.'; }
+    catch(e){ btn.disabled=false; if(e&&e.code!=='declined') $('saveMsg').textContent='저장하지 못했어요. 잠시 후 다시 눌러 주세요.'; }
     return;
   }
   const file=new File([blob],name,{type:'image/png'});
@@ -771,10 +922,27 @@ function renderFooter(){
   f.innerHTML=`<div class="brandline">찰칵포스터 <span class="lab">· ${BIZ.name} 서비스</span></div>
     <div class="links"><a href="terms.html">이용약관</a><a class="strong" href="privacy.html">개인정보처리방침</a><a href="licenses.html">오픈소스 라이선스</a></div>
     상호 ${BIZ.name} · 대표 ${BIZ.ceo} · 사업자등록번호 ${BIZ.no}<br>통신판매업 신고번호 ${BIZ.sale}<br>주소 ${BIZ.addr}<br>전화 ${BIZ.tel} · 이메일 ${BIZ.mail}
-    <p>사진은 서버로 전송되지 않고 이 기기 안에서만 처리됩니다. 만든 포스터의 사진과 문구에 대한 권리와 책임은 이용자에게 있습니다.</p>
+    <p>사진은 서버로 전송되지 않고 이용자 기기 안에서만 처리됩니다. 만든 포스터의 사진과 문구에 대한 권리와 책임은 이용자에게 있습니다.</p>
     <p>© 2026 ${BIZ.name}. All rights reserved.</p>`;
 }
 renderFooter();
+
+/* ───────── 소개 ↔ 제작 화면 전환 ───────── */
+function showView(v){
+  const app=v==='app'; $('welcome').hidden=app; $('appView').hidden=!app;
+  if(app){ try{ localStorage.setItem('chalkak_seen','1'); }catch(_){} schedule(); }
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault(); location.hash=a.dataset.go==='app'?'make':''; if(a.dataset.go==='welcome'&&!location.hash) showView('welcome'); }));
+addEventListener('hashchange',()=>showView(location.hash==='#make'?'app':'welcome'));
+let samplesDone=false;
+async function paintSamples(){ // 소개 화면의 완성 예시 포스터 (샘플 사진으로 그림)
+  if(samplesDone) return; samplesDone=true;
+  for(const c of document.querySelectorAll('#fan canvas')){
+    const t=JSON.parse(c.dataset.t); await ensureFonts(t);
+    const x=c.getContext('2d'); x.drawImage(getBg(c.dataset.bg,c.width,c.height),0,0); T[c.dataset.tpl].draw(x,c.width,c.height,t,bgTone(c.dataset.bg));
+  }
+}
 
 /* ───────── 시작 ───────── */
 let dl=null; // claude.ai 링크로 열었을 때의 저장 기능
@@ -784,7 +952,10 @@ if(window.claude?.use){ window.claude.use('downloads').then(d=>{ dl=d; }).catch(
   const sample=makeSample(); await setSource(sample,null,'sample'); S.adj={bright:0,contrast:0,sat:0,warm:0,sharp:0};
   setAdj({}); autoAdjust(); syncCut(); buildBgGrid(); buildTplGrid();
   document.fonts.ready.then(()=>{ buildTplGrid(); schedule(); });
-  schedule();
+  let seen=null; try{ seen=localStorage.getItem('chalkak_seen'); }catch(_){}
+  showView(location.hash==='#make'||(seen&&!location.hash)?'app':'welcome'); // 한 번 써 본 사람은 바로 제작 화면
+  if(seen&&!location.hash) history.replaceState(null,'','#make');
+  paintSamples(); schedule();
 })();
 </script>
 </body>
