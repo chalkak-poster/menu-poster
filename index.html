@@ -1027,7 +1027,7 @@ renderFooter();
 /* ───────── 소개 ↔ 제작 화면 전환 ───────── */
 function showView(v){
   const app=v==='app'; $('welcome').hidden=app; $('appView').hidden=!app;
-  if(app){ try{ localStorage.setItem('chalkak_seen','1'); }catch(_){} schedule(); } else requestAnimationFrame(setupWelcomeFx);
+  if(app) schedule(); else requestAnimationFrame(setupWelcomeFx);
   window.scrollTo(0,0);
 }
 document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault(); location.hash=a.dataset.go==='app'?'make':''; if(a.dataset.go==='welcome'&&!location.hash) showView('welcome'); }));
@@ -1068,9 +1068,7 @@ if(window.claude?.use){ window.claude.use('downloads').then(d=>{ dl=d; }).catch(
   const sample=makeSample(); await setSource(sample,null,'sample'); S.adj={bright:0,contrast:0,sat:0,warm:0,sharp:0};
   setAdj({}); autoAdjust(); syncCut(); buildBgGrid(); buildTplGrid();
   document.fonts.ready.then(()=>{ buildTplGrid(); schedule(); });
-  let seen=null; try{ seen=localStorage.getItem('chalkak_seen'); }catch(_){}
-  showView(location.hash==='#make'||(seen&&!location.hash)?'app':'welcome'); // 한 번 써 본 사람은 바로 제작 화면
-  if(seen&&!location.hash) history.replaceState(null,'','#make');
+  showView(location.hash==='#make'?'app':'welcome'); // 들어올 때는 항상 서비스 소개부터 (제작 중 새로고침만 제작 화면 유지)
   paintSamples(); schedule();
 })();
 </script>
