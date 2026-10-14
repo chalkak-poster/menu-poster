@@ -130,6 +130,13 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
   background:repeating-conic-gradient(rgba(127,127,127,.16) 0 25%,rgba(255,255,255,.10) 0 50%) 0 0/20px 20px;display:flex;padding:8px}
 #edCanvas{display:block;flex:none;margin:auto;touch-action:none;cursor:crosshair;max-width:none}
 .ed-title{font-weight:700;font-size:15px;margin:0}
+#bxCanvas{display:block;margin:auto;max-width:100%;max-height:100%;touch-action:none;cursor:crosshair;flex:none}
+.adv{display:flex;flex-direction:column;gap:10px}
+.adv summary{cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;list-style:none}
+.adv summary::before{content:"▸ ";} .adv[open] summary::before{content:"▾ ";}
+.adv summary::-webkit-details-marker{display:none}
+.adv[open]{gap:10px}
+
 
 /* ── 하단 정보 ── */
 .foot{max-width:1240px;margin:44px auto 0;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.8}
@@ -199,6 +206,32 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
   .steps4{grid-template-columns:repeat(2,minmax(0,1fr))}
   .cta .btn{flex:1 1 100%}
 }
+
+/* 모바일 미니 미리보기 */
+.pip{display:none}
+@media (max-width:860px){
+  .pip{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:7;
+    width:min(28vw,124px);padding:5px;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;
+    background:var(--glass);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);
+    border:1px solid var(--glass-line);box-shadow:var(--shadow),inset 0 1px 0 var(--hl);
+    transition:width .25s ease,opacity .25s ease,transform .25s ease;opacity:0;transform:translateY(12px) scale(.96);pointer-events:none}
+  .pip.show{opacity:1;transform:none;pointer-events:auto}
+  .pip.big{width:min(62vw,300px)}
+  .pip canvas{display:block;width:100%;height:auto;border-radius:9px;box-shadow:0 6px 16px rgba(0,0,0,.2)}
+  .pip span{font-size:10.5px;color:var(--muted);font-weight:600}
+}
+/* 소개 화면 움직임 */
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+@keyframes deal{from{opacity:0;transform:translateY(70px) rotate(0deg) scale(.92)}}
+.hero .eyebrow,.hero h1,.lead,.cta,.trust{animation:rise .8s cubic-bezier(.2,.7,.2,1) both}
+.hero h1{animation-delay:.08s} .lead{animation-delay:.18s} .cta{animation-delay:.28s} .trust{animation-delay:.36s}
+.fan canvas{animation:deal .95s cubic-bezier(.2,.7,.2,1) both}
+.fan canvas:nth-child(1){animation-delay:.35s} .fan canvas:nth-child(2){animation-delay:.2s} .fan canvas:nth-child(3){animation-delay:.5s}
+.fan{will-change:transform}
+[data-reveal]{transition:opacity .75s ease var(--d,0s),transform .75s cubic-bezier(.2,.7,.2,1) var(--d,0s)}
+[data-reveal].pre{opacity:0;transform:translateY(34px)}
+[data-reveal].pre.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){ .hero *,.fan canvas{animation:none!important} [data-reveal].pre{opacity:1;transform:none} }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -235,20 +268,20 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
   </div>
 
   <section aria-labelledby="featTitle">
-    <h2 class="sec-title" id="featTitle">외주 맡긴 듯한 포스터, 직접 3분이면</h2>
-    <p class="sec-sub">찰칵포스터가 사장님 대신 해 드리는 일</p>
+    <h2 class="sec-title" id="featTitle" data-reveal>외주 맡긴 듯한 포스터, 직접 3분이면</h2>
+    <p class="sec-sub" data-reveal>찰칵포스터가 사장님 대신 해 드리는 일</p>
     <div class="features">
-      <article class="feat">
+      <article class="feat" data-reveal style="--d:0.00s">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg></div>
         <h3>음식만 쏙, AI 누끼</h3>
         <p>AI가 사진에서 음식만 찾아 오려내요. 접시까지 살리고 싶거나 테두리가 아쉬우면 손가락으로 쓱쓱 다듬으면 돼요.</p>
       </article>
-      <article class="feat">
+      <article class="feat" data-reveal style="--d:0.12s">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 17h5"/><circle cx="12" cy="12" r="2.6"/></svg></div>
         <h3>배경 30종 · 매장용 템플릿</h3>
         <p>나무, 대리석, 계절 테마 같은 배경을 고르고 상호·메뉴·가격만 넣으면 매장에 바로 붙일 포스터가 완성돼요.</p>
       </article>
-      <article class="feat">
+      <article class="feat" data-reveal style="--d:0.24s">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
         <h3>사진은 내 폰 안에서만</h3>
         <p>모든 작업이 사장님 기기 안에서 이루어져요. 메뉴 사진이 어디에도 올라가거나 저장되지 않으니 안심하고 쓰세요.</p>
@@ -256,18 +289,18 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
     </div>
   </section>
 
-  <section class="how" id="how" aria-labelledby="howTitle">
+  <section class="how" id="how" aria-labelledby="howTitle" data-reveal>
     <h2 class="sec-title" id="howTitle">이렇게 만들어요</h2>
     <p class="sec-sub">휴대폰 하나로 처음부터 끝까지</p>
     <ol class="steps4">
-      <li><b>사진 올리기</b><span>휴대폰으로 찍은 메뉴 사진을 그대로 올려요.</span></li>
-      <li><b>음식 오려내기</b><span>AI 누끼 한 번. 필요하면 손가락으로 다듬어요.</span></li>
-      <li><b>꾸미기</b><span>자동 보정, 배경, 템플릿, 문구를 골라요.</span></li>
-      <li><b>저장하고 붙이기</b><span>A4로 인쇄하거나 인스타에 바로 올려요.</span></li>
+      <li data-reveal style="--d:.15s"><b>사진 올리기</b><span>휴대폰으로 찍은 메뉴 사진을 그대로 올려요.</span></li>
+      <li data-reveal style="--d:.27s"><b>음식 오려내기</b><span>AI 누끼 한 번. 필요하면 손가락으로 다듬어요.</span></li>
+      <li data-reveal style="--d:.39s"><b>꾸미기</b><span>자동 보정, 배경, 템플릿, 문구를 골라요.</span></li>
+      <li data-reveal style="--d:.51s"><b>저장하고 붙이기</b><span>A4로 인쇄하거나 인스타에 바로 올려요.</span></li>
     </ol>
   </section>
 
-  <section class="final">
+  <section class="final" data-reveal>
     <h2 class="sec-title">오늘 메뉴, 오늘 포스터로</h2>
     <p class="sec-sub" style="margin:0">신메뉴가 나온 날, 바로 만들어 붙이세요.</p>
     <a class="btn primary btn-xl" href="#make" data-go="app">지금 만들어 보기</a>
@@ -308,14 +341,17 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
       <div class="status" id="aiStatus"></div>
       <div class="cutopts" id="editRow"><button class="primary" id="openEditor">✏️ 직접 수정하기 (지우개 · 복원)</button></div>
       <div class="cutopts" id="aiOpts" hidden>
-        <div class="sl"><span>가장자리</span><input type="range" id="rEdge" min="-3" max="3" value="1"><output for="rEdge">1</output></div>
-        <div class="sl"><span>부드럽게</span><input type="range" id="rSoft" min="0" max="3" value="1"><output for="rSoft">1</output></div>
+        <button id="aiBox">🔲 음식 영역 지정해서 다시 찾기</button>
         <label class="check"><input type="checkbox" id="aiPlate"> <span>접시까지 포함<br><small>AI가 접시를 빼먹었을 때 켜세요. 아래 원 영역을 합쳐요.</small></span></label>
-        <p class="hint">가장자리를 +로 올리면 안쪽으로 깎아서 남은 배경 테두리를 없애요. −는 반대로 넓혀요.</p>
-        <label class="f">오려내기 정밀도<select id="aiModel">
-          <option value="auto">자동 (기기에 맞게)</option>
-          <option value="isnet_quint8">빠르게</option>
-          <option value="isnet_fp16">더 정교하게</option></select></label>
+        <details class="adv"><summary>세부 조정</summary>
+          <div class="sl"><span>가장자리</span><input type="range" id="rEdge" min="-3" max="3" value="1"><output for="rEdge">1</output></div>
+          <div class="sl"><span>부드럽게</span><input type="range" id="rSoft" min="0" max="3" value="1"><output for="rSoft">1</output></div>
+          <p class="hint">가장자리를 +로 올리면 안쪽으로 깎아서 남은 배경 테두리를 없애요. −는 반대로 넓혀요.</p>
+          <label class="f">오려내기 정밀도<select id="aiModel">
+            <option value="auto">자동 (기기에 맞게)</option>
+            <option value="isnet_quint8">빠르게</option>
+            <option value="isnet_fp16">더 정교하게</option></select></label>
+        </details>
       </div>
       <div class="cutopts" id="plateOpts">
         <div class="sl"><span>원 크기</span><input type="range" id="pSize" min="30" max="100" value="86"><output for="pSize">86</output></div>
@@ -377,12 +413,21 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
       <span id="saveWarnText"></span>
       <div class="row"><button id="saveFill">입력하러 가기</button><button class="primary" id="saveAnyway">그대로 저장</button></div>
     </div>
+    <button class="pip" id="pip" type="button" aria-label="포스터 미리보기 크게 보기"><canvas id="pipCanvas" width="300" height="424"></canvas><span>미리보기</span></button>
     <button class="primary big" id="dlBtn">포스터 PNG 저장</button>
   </section>
 </main>
 </div>
 
 <footer class="foot" id="ft"></footer>
+<div class="editor" id="boxer" hidden role="dialog" aria-label="음식 영역 지정">
+  <div class="ed-bar">
+    <p class="ed-title">음식이 있는 곳을 네모로 그려 주세요</p>
+    <div class="row"><button id="bxCancel">취소</button><button class="primary" id="bxGo" disabled>이 영역에서 찾기</button></div>
+  </div>
+  <div class="ed-stage"><canvas id="bxCanvas" aria-label="음식 영역 지정 화면"></canvas></div>
+  <p class="hint">여러 음식을 함께 넣으려면 모두 들어가게 크게 그려 주세요. 손가락으로 대각선 방향으로 끌면 돼요.</p>
+</div>
 <div class="editor" id="editor" hidden role="dialog" aria-label="누끼 직접 수정">
   <div class="ed-bar">
     <p class="ed-title" id="edTitle">누끼 직접 수정</p>
@@ -537,12 +582,12 @@ function buildAutoMask(){ // AI가 준 마스크 → 다듬기 (반투명 정리
   const c=mk(W,H), x=c.getContext('2d',{willReadFrequently:true});
   x.imageSmoothingQuality='high'; x.drawImage(S.aiRaw,0,0,W,H);
   const id=x.getImageData(0,0,W,H), d=id.data, N=W*H; let a=new Float32Array(N);
-  for(let i=0;i<N;i++){ const t=Math.min(1,Math.max(0,(d[i*4+3]/255-0.28)/0.44)); a[i]=t*t*(3-2*t); } // 희미한 반투명 정리
-  // 큰 덩어리만 남기기 (가장 큰 덩어리의 4% 미만인 얼룩 제거)
+  for(let i=0;i<N;i++){ const t=Math.min(1,Math.max(0,(d[i*4+3]/255-0.2)/0.45)); a[i]=t*t*(3-2*t); } // 희미한 반투명 정리
+  // 떨어진 작은 얼룩만 제거 (음식이 여러 개여도 살림)
   const bin=new Uint8Array(N); for(let i=0;i<N;i++) bin[i]=a[i]>=0.5?1:0;
   const {lab,sizes}=labelComp(bin,W,H); let big=0; for(const s of sizes) if(s>big) big=s;
-  const keep=new Float32Array(N); for(let i=0;i<N;i++) keep[i]=(lab[i]>=0&&sizes[lab[i]]>=big*0.04)?1:0;
-  const near=filt(keep,W,H,3,'max'); for(let i=0;i<N;i++) a[i]*=near[i]; // 남긴 덩어리 주변의 부드러운 가장자리만 유지
+  const keep=new Float32Array(N); for(let i=0;i<N;i++) keep[i]=(lab[i]>=0&&(sizes[lab[i]]>=big*0.01||sizes[lab[i]]>=N*0.0015))?1:0; // 떨어진 음식(반찬·음료 여러 개)도 살림
+  const near=filt(keep,W,H,4,'max'); for(let i=0;i<N;i++) a[i]*=near[i]; // 남긴 덩어리 주변의 부드러운 가장자리만 유지
   // 구멍 메우기 (음식 면적의 3% 미만인 빈 곳)
   const hole=new Uint8Array(N); for(let i=0;i<N;i++) hole[i]=a[i]<0.5?1:0;
   const hc=labelComp(hole,W,H), touches=new Uint8Array(hc.sizes.length);
@@ -603,27 +648,79 @@ function getFood(){
 let imglyMod=null;
 const isPhone=()=>matchMedia('(pointer:coarse)').matches;
 function aiModel(){ const v=$('aiModel').value; return v!=='auto'?v:(isPhone()?'isnet_quint8':'isnet_fp16'); }
-async function runAI(){
+async function aiAlpha(src,r,model,onp){ // src의 r 영역을 AI에 보내고, 그 영역 크기의 알파값(0~1) 배열을 돌려줌
+  const k=Math.min(1,1024/Math.max(r.w,r.h)), sc=mk(Math.max(1,Math.round(r.w*k)),Math.max(1,Math.round(r.h*k)));
+  sc.getContext('2d').drawImage(src,r.x,r.y,r.w,r.h,0,0,sc.width,sc.height);
+  const blob=await new Promise(res=>sc.toBlob(res,'image/jpeg',.92));
+  const out=await imglyMod.removeBackground(blob,{model,progress:onp});
+  const im=await loadImg(URL.createObjectURL(out)), c=mk(r.w,r.h), x=c.getContext('2d',{willReadFrequently:true});
+  x.imageSmoothingQuality='high'; x.drawImage(im,0,0,r.w,r.h);
+  const d=x.getImageData(0,0,r.w,r.h).data, a=new Float32Array(r.w*r.h); for(let i=0;i<a.length;i++) a[i]=d[i*4+3]/255;
+  return a;
+}
+function findItems(A,W,H,region){ // 1차 결과에서 음식 덩어리 찾기 (큰 순서로 최대 3개, 여백 15%)
+  const s=Math.min(1,256/Math.max(W,H)), w=Math.max(1,Math.round(W*s)), h=Math.max(1,Math.round(H*s)), bin=new Uint8Array(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) bin[y*w+x]=A[Math.min(H-1,Math.round(y/s))*W+Math.min(W-1,Math.round(x/s))]>=0.35?1:0;
+  const {lab,sizes}=labelComp(bin,w,h); let big=0; for(const z of sizes) if(z>big) big=z; if(!big) return [];
+  const bb=sizes.map(()=>[w,h,0,0]);
+  for(let i=0;i<lab.length;i++){ const L=lab[i]; if(L<0) continue; const x=i%w, y=(i/w)|0, b=bb[L]; if(x<b[0])b[0]=x; if(y<b[1])b[1]=y; if(x>b[2])b[2]=x; if(y>b[3])b[3]=y; }
+  return sizes.map((z,L)=>({z,b:bb[L]})).filter(o=>o.z>=big*0.05).sort((p,q)=>q.z-p.z).slice(0,3).map(({b})=>{
+    let x0=b[0]/s,y0=b[1]/s,x1=(b[2]+1)/s,y1=(b[3]+1)/s; const px=(x1-x0)*.15, py=(y1-y0)*.15;
+    x0=Math.max(region.x,x0-px); y0=Math.max(region.y,y0-py); x1=Math.min(region.x+region.w,x1+px); y1=Math.min(region.y+region.h,y1+py);
+    return {x:Math.round(x0),y:Math.round(y0),w:Math.max(8,Math.round(x1-x0)),h:Math.max(8,Math.round(y1-y0))}; });
+}
+async function runAI(box){ // 버튼 한 번: ① 전체(또는 지정 영역)에서 음식 찾기 → ② 음식마다 확대해서 한 번 더 정밀하게
   const st=$('aiStatus'), model=aiModel(), btn=document.querySelector('[data-cut="ai"] b');
   st.className='status'; st.textContent='음식을 찾고 있어요… 처음 한 번은 준비하느라 조금 걸려요.';
-  document.querySelectorAll('[data-cut]').forEach(b=>b.disabled=true); btn.textContent='✨ AI 처리 중…';
+  document.querySelectorAll('[data-cut],#aiBox').forEach(b=>b.disabled=true); btn.textContent='✨ AI 처리 중…';
   try{
     if(!imglyMod) imglyMod=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
-    // 모델 입력이 1024px이라 긴 변 1024px로 줄여 보냄 (폰 메모리 절약, 마스크는 원래 크기로 늘려 다듬음)
     if(!baseCanvas) baseCanvas=procSource();
-    const k=Math.min(1,1024/Math.max(baseCanvas.width,baseCanvas.height)), sc=mk(Math.round(baseCanvas.width*k),Math.round(baseCanvas.height*k));
-    sc.getContext('2d').drawImage(baseCanvas,0,0,sc.width,sc.height);
-    const blob=await new Promise(r=>sc.toBlob(r,'image/jpeg',.92));
-    const t0=performance.now();
-    const res=await imglyMod.removeBackground(blob,{ model, progress:(key,c,t)=>{ if(t) st.textContent=`AI 준비 중 ${Math.round(c/t*100)}%`; } });
-    S.aiRaw=await loadImg(URL.createObjectURL(res)); S.aiStamp=Date.now(); S.strokesBy.ai=[]; S.editVer++;
-    st.textContent='음식만 오려냈어요. 아쉬운 테두리는 ✏️ 직접 수정하기로 다듬어 보세요.';
+    const src=baseCanvas, W=src.width, H=src.height, region=box||{x:0,y:0,w:W,h:H};
+    const onp=(key,c,t)=>{ if(t&&c<t) st.textContent=`AI 준비 중 ${Math.round(c/t*100)}%`; };
+    const A=new Float32Array(W*H), put=(a,r)=>{ for(let y=0;y<r.h;y++){ const o=(r.y+y)*W+r.x, p=y*r.w; for(let x=0;x<r.w;x++){ const v=a[p+x]; if(v>A[o+x]) A[o+x]=v; } } };
+    put(await aiAlpha(src,region,model,onp),region);
+    const items=findItems(A,W,H,region).filter(r=>r.w*r.h<region.w*region.h*0.8); // 이미 화면 대부분이면 2차는 생략
+    for(let i=0;i<items.length;i++){
+      st.textContent=items.length>1?`더 정밀하게 다듬는 중… (${i+1}/${items.length})`:'더 정밀하게 다듬는 중…';
+      put(await aiAlpha(src,items[i],model,onp),items[i]);
+    }
+    const c=mk(W,H), x=c.getContext('2d'), id=x.createImageData(W,H); for(let i=0;i<A.length;i++) id.data[i*4+3]=Math.round(A[i]*255);
+    x.putImageData(id,0,0);
+    S.aiRaw=c; S.aiStamp=Date.now(); S.strokesBy.ai=[]; S.editVer++;
+    st.textContent='음식만 오려냈어요. 아쉬우면 ✏️ 직접 수정하기나 영역 지정으로 다시 찾을 수 있어요.';
     S.cut='ai'; syncCut(); if(!S.adjManual) autoAdjust(); schedule();
   }catch(e){
     console.warn(e); st.className='status err';
     st.textContent='AI 오려내기를 시작하지 못했어요. 인터넷 연결을 확인하거나 ‘접시 원형으로 오리기’를 써 보세요.';
     S.cut=S.aiRaw?'ai':'plate'; syncCut(); schedule();
-  }finally{ document.querySelectorAll('[data-cut]').forEach(b=>b.disabled=false); btn.textContent='✨ AI 누끼'; }
+  }finally{ document.querySelectorAll('[data-cut],#aiBox').forEach(b=>b.disabled=false); btn.textContent='✨ AI 누끼'; }
+}
+
+/* ───────── 2-0. 음식 영역 지정 (네모를 그려 그 안에서만 찾기) ───────── */
+const BX={r:null,drag:null,k:1};
+function openBoxer(){
+  if(!baseCanvas) baseCanvas=procSource();
+  const cv=$('bxCanvas'); cv.width=baseCanvas.width; cv.height=baseCanvas.height; BX.r=null; $('bxGo').disabled=true;
+  $('boxer').hidden=false; document.body.style.overflow='hidden'; drawBoxer();
+}
+function closeBoxer(){ $('boxer').hidden=true; document.body.style.overflow=''; }
+function drawBoxer(){
+  const cv=$('bxCanvas'), x=cv.getContext('2d'); x.drawImage(applyAdj(),0,0);
+  if(!BX.r) return; const r=BX.r;
+  x.fillStyle='rgba(0,0,0,.45)'; x.beginPath(); x.rect(0,0,cv.width,cv.height); x.rect(r.x,r.y+r.h,r.w,-r.h); x.fill('evenodd');
+  x.strokeStyle='#f0b93a'; x.lineWidth=Math.max(3,cv.width/250); x.setLineDash([x.lineWidth*4,x.lineWidth*2.5]); x.strokeRect(r.x,r.y,r.w,r.h); x.setLineDash([]);
+}
+function setupBoxer(){
+  const cv=$('bxCanvas'), pt=e=>{ const b=cv.getBoundingClientRect(); return [(e.clientX-b.left)*cv.width/b.width,(e.clientY-b.top)*cv.height/b.height]; };
+  cv.addEventListener('pointerdown',e=>{ e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} BX.drag=pt(e); });
+  cv.addEventListener('pointermove',e=>{ if(!BX.drag) return; const [a,b]=BX.drag, [c,d]=pt(e);
+    BX.r={x:Math.max(0,Math.min(a,c)),y:Math.max(0,Math.min(b,d)),w:Math.abs(c-a),h:Math.abs(d-b)}; drawBoxer(); });
+  const end=()=>{ BX.drag=null; if(BX.r&&(BX.r.w<cv.width*.06||BX.r.h<cv.height*.06)){ BX.r=null; drawBoxer(); } $('bxGo').disabled=!BX.r; };
+  cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end);
+  $('bxCancel').onclick=closeBoxer;
+  $('bxGo').onclick=()=>{ const r=BX.r, W=cv.width, H=cv.height; closeBoxer();
+    runAI({x:Math.round(r.x),y:Math.round(r.y),w:Math.round(Math.min(r.w,W-r.x)),h:Math.round(Math.min(r.h,H-r.y))}); };
 }
 
 /* ───────── 2-1. 누끼 직접 수정 (지우개 / 복원 붓) ───────── */
@@ -822,7 +919,7 @@ async function render(){
     const t=texts(); await ensureFonts(t);
     const x=poster.getContext('2d'); x.clearRect(0,0,W,H); x.drawImage(getBg(S.bg,W,H),0,0);
     T[S.tpl].draw(x,W,H,t,bgTone(S.bg));
-    $('dims').textContent=label;
+    $('dims').textContent=label; updatePip();
   }catch(e){ console.error(e); $('saveMsg').textContent='미리보기를 그리지 못했어요. 새로고침해 주세요.'; }
   rendering=false; if(again){ again=false; schedule(); }
 }
@@ -876,7 +973,7 @@ $('resetAdj').onclick=()=>setAdj({bright:0,contrast:0,sat:0,warm:0,sharp:0});
 document.querySelectorAll('[data-cut]').forEach(b=>b.onclick=()=>{ const c=b.dataset.cut; if(c==='ai'&&!S.aiRaw){ runAI(); return; } S.cut=c; syncCut(); if(!S.adjManual) autoAdjust(); schedule(); });
 for(const [id,k] of [['rEdge','edge'],['rSoft','soft']]) $(id).addEventListener('input',e=>{ S.refine[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
 $('aiModel').addEventListener('change',()=>{ if(S.aiRaw) runAI(); });
-$('openEditor').onclick=openEditor; setupEditor();
+$('openEditor').onclick=openEditor; setupEditor(); setupBoxer(); $('aiBox').onclick=openBoxer;
 $('aiPlate').addEventListener('change',e=>{ S.aiPlate=e.target.checked; syncCut(); schedule(); });
 for(const [id,k] of [['pSize','size'],['pX','x'],['pY','y']]) $(id).addEventListener('input',e=>{ S.plate[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
 $('bgFile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ S.bgCustom=await loadImg(URL.createObjectURL(f)); S.bg='custom'; S.bgTouched=true; buildBgGrid(); schedule(); }catch(err){} };
@@ -930,7 +1027,7 @@ renderFooter();
 /* ───────── 소개 ↔ 제작 화면 전환 ───────── */
 function showView(v){
   const app=v==='app'; $('welcome').hidden=app; $('appView').hidden=!app;
-  if(app){ try{ localStorage.setItem('chalkak_seen','1'); }catch(_){} schedule(); }
+  if(app){ try{ localStorage.setItem('chalkak_seen','1'); }catch(_){} schedule(); } else requestAnimationFrame(setupWelcomeFx);
   window.scrollTo(0,0);
 }
 document.querySelectorAll('[data-go]').forEach(a=>a.addEventListener('click',e=>{ e.preventDefault(); location.hash=a.dataset.go==='app'?'make':''; if(a.dataset.go==='welcome'&&!location.hash) showView('welcome'); }));
@@ -942,6 +1039,25 @@ async function paintSamples(){ // 소개 화면의 완성 예시 포스터 (샘�
     const t=JSON.parse(c.dataset.t); await ensureFonts(t);
     const x=c.getContext('2d'); x.drawImage(getBg(c.dataset.bg,c.width,c.height),0,0); T[c.dataset.tpl].draw(x,c.width,c.height,t,bgTone(c.dataset.bg));
   }
+}
+
+/* ───────── 모바일 미니 미리보기 (큰 미리보기가 화면 밖일 때) ───────── */
+function updatePip(){ const c=$('pipCanvas'); if(!c) return; const h=Math.round(c.width*poster.height/poster.width);
+  if(c.height!==h) c.height=h; const x=c.getContext('2d'); x.clearRect(0,0,c.width,c.height); x.drawImage(poster,0,0,c.width,c.height); }
+(function(){ const pip=$('pip'); if(!('IntersectionObserver' in window)) return;
+  new IntersectionObserver(es=>es.forEach(e=>{ pip.classList.toggle('show',!e.isIntersecting); if(e.isIntersecting) pip.classList.remove('big'); }),{threshold:.08}).observe(document.querySelector('.stage'));
+  pip.onclick=()=>pip.classList.toggle('big'); })();
+
+/* ───────── 소개 화면 움직임 (스크롤하면 떠오름, 포스터 패럴랙스) ───────── */
+let fxReady=false;
+function setupWelcomeFx(){
+  if(fxReady||$('welcome').hidden) return; fxReady=true;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches||!('IntersectionObserver' in window)) return;
+  const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }),{threshold:.12});
+  document.querySelectorAll('#welcome [data-reveal]').forEach(el=>{ if(el.getBoundingClientRect().top>innerHeight*.9){ el.classList.add('pre'); io.observe(el); } });
+  const fan=$('fan'); let tick=false;
+  addEventListener('scroll',()=>{ if(tick||$('welcome').hidden) return; tick=true;
+    requestAnimationFrame(()=>{ tick=false; const y=scrollY, p=Math.min(1,y/650); fan.style.transform=`translateY(${(-y*0.12).toFixed(1)}px) scale(${(1-p*0.07).toFixed(3)})`; }); },{passive:true});
 }
 
 /* ───────── 시작 ───────── */
