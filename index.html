@@ -5,7 +5,21 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' 'unsafe-eval' blob: https://cdn.jsdelivr.net https://staticimgly.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' data: blob: https://cdn.jsdelivr.net https://staticimgly.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>찰칵포스터</title>
+<title>찰칵포스터 — 메뉴 사진 한 장으로 매장 포스터</title>
+<meta name="description" content="메뉴 사진 한 장으로 매장에 붙일 포스터를 만들어요. AI 누끼, 배경 30종, 템플릿까지 무료. 사진은 서버로 전송되지 않아요.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="찰칵포스터">
+<meta property="og:title" content="찰칵포스터 — 메뉴 사진 한 장으로 매장 포스터">
+<meta property="og:description" content="AI 누끼 · 배경 30종 · 템플릿. 사장님이 직접 3분 만에 만드는 메뉴 포스터">
+<meta property="og:image" content="https://chalkak-poster.github.io/menu-poster/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://chalkak-poster.github.io/menu-poster/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1f5a4a">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;600;700&family=Nanum+Myeongjo:wght@700;800&family=Nanum+Pen+Script&display=swap">
@@ -71,6 +85,14 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
 #poster{max-width:100%;max-height:calc(100vh - 190px);height:auto;box-shadow:0 10px 30px rgba(0,0,0,.18);border-radius:2px}
 .meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
 .cutopts{display:flex;flex-direction:column;gap:10px}
+.foot{max-width:1240px;margin:36px auto 0;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);line-height:1.8}
+.foot .brandline{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);font-weight:600;margin-bottom:8px}
+.foot .brandline .lab{font-weight:400;color:var(--muted)}
+.foot .links{display:flex;flex-wrap:wrap;gap:4px 14px;margin-bottom:10px}
+.foot .links a{color:var(--ink);font-size:12.5px;text-decoration:none}
+.foot .links a:hover{text-decoration:underline}
+.foot .links .strong{font-weight:700}
+.foot p{margin:10px 0 0}
 .cutbtns{display:flex;flex-direction:column;gap:8px}
 .check{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;cursor:pointer}
 .check input{width:20px;height:20px;margin-top:1px;accent-color:var(--accent);flex:none}
@@ -208,6 +230,8 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
     <button class="primary big" id="dlBtn">포스터 PNG 저장</button>
   </section>
 </main>
+
+<footer class="foot" id="ft"></footer>
 <div class="editor" id="editor" hidden role="dialog" aria-label="누끼 직접 수정">
   <div class="ed-bar">
     <p class="ed-title" id="edTitle">누끼 직접 수정</p>
@@ -739,6 +763,18 @@ async function savePoster(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
   document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); done();
 };
+
+/* ───────── 하단 정보 (행운랩스 사업자 정보: 등록 후 채움) ───────── */
+const BIZ={name:'행운랩스',ceo:'[대표자]',no:'[사업자등록번호]',sale:'[통신판매업 신고번호]',addr:'[주소]',tel:'[전화번호]',mail:'[이메일]'};
+function renderFooter(){
+  const f=$('ft'); if(!f) return;
+  f.innerHTML=`<div class="brandline">찰칵포스터 <span class="lab">· ${BIZ.name} 서비스</span></div>
+    <div class="links"><a href="terms.html">이용약관</a><a class="strong" href="privacy.html">개인정보처리방침</a><a href="licenses.html">오픈소스 라이선스</a></div>
+    상호 ${BIZ.name} · 대표 ${BIZ.ceo} · 사업자등록번호 ${BIZ.no}<br>통신판매업 신고번호 ${BIZ.sale}<br>주소 ${BIZ.addr}<br>전화 ${BIZ.tel} · 이메일 ${BIZ.mail}
+    <p>사진은 서버로 전송되지 않고 이 기기 안에서만 처리됩니다. 만든 포스터의 사진과 문구에 대한 권리와 책임은 이용자에게 있습니다.</p>
+    <p>© 2026 ${BIZ.name}. All rights reserved.</p>`;
+}
+renderFooter();
 
 /* ───────── 시작 ───────── */
 let dl=null; // claude.ai 링크로 열었을 때의 저장 기능

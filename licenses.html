@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'none'; base-uri 'none'; form-action 'none'">
+<title>오픈소스 라이선스 — 찰칵포스터</title>
+<meta name="theme-color" content="#1f5a4a">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f3f4f1;--panel:#fff;--ink:#1c2422;--muted:#5f6a66;--line:#dde1dc;--accent:#1f5a4a;--pop:#e3a21a;
+  --f-display:"Black Han Sans","IBM Plex Sans KR",system-ui,sans-serif;--f-ui:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#141a18;--panel:#1c2421;--ink:#e8ece9;--muted:#9aa6a1;--line:#2d3834;--accent:#5fbfa0;--pop:#f0b93a;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 var(--f-ui);
+  padding:24px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+main{max-width:760px;margin:0 auto}
+.back{display:inline-block;color:var(--accent);text-decoration:none;font-weight:600;margin-bottom:18px}
+.logo{font:400 24px/1 var(--f-display)} .logo b{color:var(--pop);font-weight:400}
+h1{font-size:24px;margin:14px 0 4px} .eff{color:var(--muted);font-size:13px;margin:0 0 22px}
+h2{font-size:16px;margin:26px 0 6px} p,li{margin:6px 0} ul,ol{padding-left:20px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0} th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel)} .wrap{overflow-x:auto}
+a{color:var(--accent)}
+footer{max-width:760px;margin:40px auto 0;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="./">← 찰칵포스터로 돌아가기</a>
+<div class="logo">찰칵<b>포스터</b></div>
+<h1>오픈소스 라이선스</h1>
+<p class="eff">찰칵포스터가 사용하는 오픈소스</p>
+
+<p>찰칵포스터는 아래 오픈소스 소프트웨어와 글꼴을 사용합니다. 감사합니다.</p>
+<div class="wrap"><table>
+<tr><th>이름</th><th>용도</th><th>라이선스</th></tr>
+<tr><td><a href="https://github.com/imgly/background-removal-js">@imgly/background-removal</a></td><td>AI 음식 오려내기</td><td>AGPL-3.0</td></tr>
+<tr><td><a href="https://github.com/microsoft/onnxruntime">ONNX Runtime Web</a></td><td>AI 모델 실행</td><td>MIT</td></tr>
+<tr><td>Black Han Sans, Gowun Dodum, IBM Plex Sans KR, Nanum Myeongjo, Nanum Pen Script</td><td>화면·포스터 글꼴 (Google Fonts)</td><td>SIL Open Font License 1.1</td></tr>
+</table></div>
+<h2>소스 코드</h2>
+<p>AGPL-3.0 라이선스에 따라 찰칵포스터 웹사이트의 전체 소스 코드를 공개합니다: <a href="https://github.com/chalkak-poster/menu-poster">https://github.com/chalkak-poster/menu-poster</a></p>
+</main>
+<footer>찰칵포스터 · 행운랩스 서비스<br>© 2026 행운랩스. All rights reserved.</footer>
+</body>
+</html>
