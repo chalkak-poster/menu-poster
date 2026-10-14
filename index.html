@@ -72,6 +72,9 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
 .meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
 .cutopts{display:flex;flex-direction:column;gap:10px}
 .cutbtns{display:flex;flex-direction:column;gap:8px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;cursor:pointer}
+.check input{width:20px;height:20px;margin-top:1px;accent-color:var(--accent);flex:none}
+.check small{font-weight:400;color:var(--muted);font-size:12.5px}
 .warn{background:var(--panel);border:1.5px solid var(--pop);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:14px}
 @media (max-width:860px){ .warn{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6;box-shadow:0 8px 24px rgba(0,0,0,.2)} }
 .cut-ai{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border:2px solid var(--accent);text-align:left}
@@ -131,10 +134,11 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
         </div>
       </div>
       <div class="status" id="aiStatus"></div>
+      <div class="cutopts" id="editRow"><button class="primary" id="openEditor">✏️ 직접 수정하기 (지우개 · 복원)</button></div>
       <div class="cutopts" id="aiOpts" hidden>
-        <button class="primary" id="openEditor">✏️ 직접 수정하기 (지우개 · 복원)</button>
         <div class="sl"><span>가장자리</span><input type="range" id="rEdge" min="-3" max="3" value="1"><output for="rEdge">1</output></div>
         <div class="sl"><span>부드럽게</span><input type="range" id="rSoft" min="0" max="3" value="1"><output for="rSoft">1</output></div>
+        <label class="check"><input type="checkbox" id="aiPlate"> <span>접시까지 포함<br><small>AI가 접시를 빼먹었을 때 켜세요. 아래 원 영역을 합쳐요.</small></span></label>
         <p class="hint">가장자리를 +로 올리면 안쪽으로 깎아서 남은 배경 테두리를 없애요. −는 반대로 넓혀요.</p>
         <label class="f">AI 모델<select id="aiModel">
           <option value="auto">자동 (폰은 빠름, PC는 고화질)</option>
@@ -206,7 +210,7 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
 </main>
 <div class="editor" id="editor" hidden role="dialog" aria-label="누끼 직접 수정">
   <div class="ed-bar">
-    <p class="ed-title">누끼 직접 수정</p>
+    <p class="ed-title" id="edTitle">누끼 직접 수정</p>
     <div class="row" role="group" aria-label="도구">
       <button data-tool="erase" aria-pressed="true">🧽 지우개</button>
       <button data-tool="restore" aria-pressed="false">🖌️ 복원</button>
@@ -231,7 +235,7 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
 const S = {
   src:null, srcBlob:null, srcName:'sample',
   adj:{bright:0,contrast:0,sat:0,warm:0,sharp:0},
-  cut:'plate', plate:{size:86,x:0,y:0}, aiRaw:null, aiStamp:0, refine:{edge:1,soft:1}, strokes:[], editVer:0,
+  cut:'plate', plate:{size:86,x:0,y:0}, aiRaw:null, aiStamp:0, aiPlate:false, refine:{edge:1,soft:1}, strokesBy:{ai:[],plate:[]}, editVer:0,
   bg:'oak', bgCat:'전체', bgCustom:null, brand:'#c8452d',
   tpl:'classic', size:'a4', bgTouched:false,
 };
@@ -317,9 +321,7 @@ function autoAdjust(){ // 누끼가 있으면 음식 부분만 보고 밝기·�
   const t=mk(96,Math.max(1,Math.round(96*baseCanvas.height/baseCanvas.width))), tx=t.getContext('2d',{willReadFrequently:true});
   tx.drawImage(baseCanvas,0,0,t.width,t.height); const d=tx.getImageData(0,0,t.width,t.height).data;
   let m=null;
-  if(S.cut==='ai'&&S.aiRaw){ const mc=mk(t.width,t.height), mx2=mc.getContext('2d',{willReadFrequently:true}); mx2.drawImage(buildFinalMask(),0,0,t.width,t.height); m=mx2.getImageData(0,0,t.width,t.height).data; }
-  else if(S.cut==='plate'){ const mc=mk(t.width,t.height), mx2=mc.getContext('2d',{willReadFrequently:true}), r=Math.min(t.width,t.height)*S.plate.size/200;
-    mx2.beginPath(); mx2.arc(t.width/2+S.plate.x/100*t.width,t.height/2+S.plate.y/100*t.height,r,0,7); mx2.fill(); m=mx2.getImageData(0,0,t.width,t.height).data; }
+  if(hasMask()){ const mc=mk(t.width,t.height), mx2=mc.getContext('2d',{willReadFrequently:true}); mx2.drawImage(buildFinalMask(),0,0,t.width,t.height); m=mx2.getImageData(0,0,t.width,t.height).data; }
   let L=0,Sa=0,n=0; for(let i=0;i<d.length;i+=4){ if(m&&m[i+3]<128) continue; const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b); L+=0.299*r+0.587*g+0.114*b; Sa+=mx?(mx-mn)/mx:0; n++; }
   if(!n) return; L/=n; Sa/=n;
   setAdj({ bright:Math.round(clamp((138-L)/2.2*0.8,-20,35)), contrast:14, sat:Math.round(clamp((0.55-Sa)*80,6,35)), warm:8, sharp:35 }); S.adjManual=false;
@@ -386,26 +388,35 @@ function applyStroke(x,s,from=0){ // 직접 수정 붓질을 마스크에 반영
   else { x.beginPath(); x.moveTo(P[from][0],P[from][1]); for(let i=from+1;i<P.length;i++) x.lineTo(P[i][0],P[i][1]); x.stroke(); }
   x.restore();
 }
+const hasMask=()=>S.cut==='plate'||(S.cut==='ai'&&!!S.aiRaw);
+const strokes=()=>S.strokesBy[S.cut]||(S.strokesBy[S.cut]=[]); // 수정 내용은 방식별로 따로 저장
+let maskBase=null, maskBaseKey='';
+function plateCircle(x,W,H){ // 접시 원 (가장자리 살짝 흐리게)
+  const r=Math.min(W,H)*S.plate.size/200, cx=W/2+S.plate.x/100*W, cy=H/2+S.plate.y/100*H;
+  const g=x.createRadialGradient(cx,cy,r*0.94,cx,cy,r); g.addColorStop(0,'#000'); g.addColorStop(1,'rgba(0,0,0,0)');
+  x.fillStyle=g; x.beginPath(); x.arc(cx,cy,r,0,7); x.fill();
+}
+function buildBaseMask(){ // 수정 전 기본 마스크: AI 결과 (+접시 원) 또는 접시 원
+  const p=applyAdj(), W=p.width, H=p.height, usePlate=S.cut==='plate'||S.aiPlate;
+  const key=S.cut+'|'+W+'x'+H+'|'+(S.cut==='ai'?(buildAutoMask(),maskAutoKey)+'|'+S.aiPlate:'')+'|'+(usePlate?JSON.stringify(S.plate):'');
+  if(maskBase&&key===maskBaseKey) return maskBase;
+  const c=mk(W,H), x=c.getContext('2d');
+  if(S.cut==='ai') x.drawImage(buildAutoMask(),0,0);
+  if(usePlate) plateCircle(x,W,H);
+  maskBase=c; maskBaseKey=key; return c;
+}
 function buildFinalMask(){
-  const ma=buildAutoMask(), key=maskAutoKey+'|'+S.strokes.length+'|'+S.editVer;
+  const mb=buildBaseMask(), key=maskBaseKey+'|'+strokes().length+'|'+S.editVer;
   if(maskFinal && key===maskFinalKey) return maskFinal;
-  const c=mk(ma.width,ma.height), x=c.getContext('2d'); x.drawImage(ma,0,0);
-  for(const s of S.strokes) applyStroke(x,s);
+  const c=mk(mb.width,mb.height), x=c.getContext('2d'); x.drawImage(mb,0,0);
+  for(const s of strokes()) applyStroke(x,s);
   maskFinal=c; maskFinalKey=key; return c;
 }
 function getFood(){
-  const p=applyAdj(); const key=procKey+'|'+S.cut+'|'+JSON.stringify(S.plate)+'|'+(S.cut==='ai'&&S.aiRaw?(buildFinalMask(),maskFinalKey):'');
+  const p=applyAdj(); const key=procKey+'|'+S.cut+'|'+(hasMask()?(buildFinalMask(),maskFinalKey):'');
   if(foodCanvas && key===foodKey) return foodCanvas;
   let out;
-  if(S.cut==='plate'){
-    const m=Math.min(p.width,p.height), d=Math.round(m*S.plate.size/100);
-    const cx=p.width/2+S.plate.x/100*p.width, cy=p.height/2+S.plate.y/100*p.height;
-    out=mk(d,d); const x=out.getContext('2d');
-    x.drawImage(p,cx-d/2,cy-d/2,d,d,0,0,d,d);
-    x.globalCompositeOperation='destination-in';
-    const g=x.createRadialGradient(d/2,d/2,d/2*0.94,d/2,d/2,d/2); g.addColorStop(0,'#000'); g.addColorStop(1,'rgba(0,0,0,0)');
-    x.fillStyle=g; x.beginPath(); x.arc(d/2,d/2,d/2,0,7); x.fill();
-  } else if(S.cut==='ai' && S.aiRaw){
+  if(hasMask()){
     const w=p.width,h=p.height, t=mk(w,h), x=t.getContext('2d',{willReadFrequently:true});
     x.drawImage(p,0,0); x.globalCompositeOperation='destination-in'; x.drawImage(buildFinalMask(),0,0);
     const d=x.getImageData(0,0,w,h).data; let x0=w,y0=h,x1=0,y1=0; // 투명 여백 잘라내기
@@ -430,7 +441,7 @@ async function runAI(){
     const blob=await new Promise(r=>sc.toBlob(r,'image/jpeg',.92));
     const t0=performance.now();
     const res=await imglyMod.removeBackground(blob,{ model, progress:(key,c,t)=>{ if(t) st.textContent=`AI 모델 받는 중 ${Math.round(c/t*100)}%`; } });
-    S.aiRaw=await loadImg(URL.createObjectURL(res)); S.aiStamp=Date.now(); S.strokes=[]; S.editVer++;
+    S.aiRaw=await loadImg(URL.createObjectURL(res)); S.aiStamp=Date.now(); S.strokesBy.ai=[]; S.editVer++;
     st.textContent=`AI 누끼 완료 (${model==='isnet_fp16'?'고화질':'빠름'} 모델, ${((performance.now()-t0)/1000).toFixed(1)}초) · 음식 부분에 맞춰 자동 보정도 다시 했어요. 아쉬운 테두리는 “직접 수정하기”로 다듬으세요.`;
     S.cut='ai'; syncCut(); if(!S.adjManual) autoAdjust(); schedule();
   }catch(e){
@@ -443,7 +454,8 @@ async function runAI(){
 /* ───────── 2-1. 누끼 직접 수정 (지우개 / 복원 붓) ───────── */
 const ED={tool:'erase', zoom:1, fit:1, drawing:null, pan:null, hover:null, raf:0, cut:null};
 function openEditor(){
-  if(!S.aiRaw) return;
+  if(!hasMask()) return;
+  $('edTitle').textContent=S.cut==='ai'?'AI 누끼 직접 수정':'접시 원형 직접 수정';
   $('editor').hidden=false; document.body.style.overflow='hidden';
   const m=buildFinalMask(), cv=$('edCanvas'); cv.width=m.width; cv.height=m.height;
   ED.cut=mk(m.width,m.height); ED.zoom=1; $('zoom').value=1; $('zoom').nextElementSibling.value='1×';
@@ -499,7 +511,7 @@ function setupEditor(){
     redraw();
   });
   const end=e=>{ P.delete(e.pointerId);
-    if(ED.drawing&&ED.drawing.id===e.pointerId){ const s=ED.drawing; delete s.id; S.strokes.push(s); ED.drawing=null; maskFinalKey=maskAutoKey+'|'+S.strokes.length+'|'+S.editVer; }
+    if(ED.drawing&&ED.drawing.id===e.pointerId){ const s=ED.drawing; delete s.id; strokes().push(s); ED.drawing=null; maskFinalKey=maskBaseKey+'|'+strokes().length+'|'+S.editVer; }
     if(P.size<2) pinch=null; if(!P.size) ED.pan=null; };
   cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end);
   cv.addEventListener('pointerleave',()=>{ ED.hover=null; redraw(); });
@@ -507,8 +519,8 @@ function setupEditor(){
   document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{ ED.tool=b.dataset.tool; document.querySelectorAll('[data-tool]').forEach(o=>o.setAttribute('aria-pressed',o===b)); cv.style.cursor=ED.tool==='pan'?'grab':'crosshair'; });
   $('brush').addEventListener('input',e=>{ e.target.nextElementSibling.value=e.target.value; });
   $('zoom').addEventListener('input',e=>setZoom(+e.target.value));
-  $('edUndo').onclick=()=>{ if(!S.strokes.length) return; S.strokes.pop(); S.editVer++; buildFinalMask(); redraw(); };
-  $('edReset').onclick=()=>{ S.strokes=[]; S.editVer++; buildFinalMask(); redraw(); };
+  $('edUndo').onclick=()=>{ const a=strokes(); if(!a.length) return; a.pop(); S.editVer++; buildFinalMask(); redraw(); };
+  $('edReset').onclick=()=>{ S.strokesBy[S.cut]=[]; S.editVer++; buildFinalMask(); redraw(); };
   $('edDone').onclick=closeEditor;
   document.addEventListener('keydown',e=>{ if($('editor').hidden) return; if(e.key==='Escape') closeEditor(); if((e.ctrlKey||e.metaKey)&&e.key==='z'){ e.preventDefault(); $('edUndo').click(); } });
   addEventListener('resize',()=>{ if(!$('editor').hidden){ fitEditor(); } });
@@ -661,11 +673,12 @@ function buildTplGrid(){
     x.drawImage(big,0,0,150,150); b.append(c); const sp=document.createElement('span'); sp.textContent=T[k].name; b.append(sp);
     b.onclick=()=>{ S.tpl=k; if(!S.bgTouched) S.bg=T[k].bg; buildTplGrid(); buildBgGrid(); schedule(); }; g.append(b); }
 }
-function syncCut(){ document.querySelectorAll('[data-cut]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.cut===S.cut)); $('plateOpts').hidden=S.cut!=='plate'; $('aiOpts').hidden=!(S.cut==='ai'&&S.aiRaw); }
+function syncCut(){ document.querySelectorAll('[data-cut]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.cut===S.cut));
+  $('plateOpts').hidden=!(S.cut==='plate'||(S.cut==='ai'&&S.aiRaw&&S.aiPlate)); $('aiOpts').hidden=!(S.cut==='ai'&&S.aiRaw); $('editRow').hidden=!hasMask(); }
 
 /* ───────── 입력 연결 ───────── */
 async function setSource(img,blob,name){
-  S.src=img; S.srcBlob=blob; S.srcName=name+':'+Date.now(); S.aiRaw=null; S.strokes=[]; baseCanvas=null; processed=null; foodCanvas=null; maskAuto=null; maskFinal=null;
+  S.src=img; S.srcBlob=blob; S.srcName=name+':'+Date.now(); S.aiRaw=null; S.strokesBy={ai:[],plate:[]}; baseCanvas=null; processed=null; foodCanvas=null; maskAuto=null; maskFinal=null;
   if(S.cut==='ai') S.cut='plate'; syncCut(); $('aiStatus').className='status';
   $('aiStatus').textContent=blob?'사진이 올라갔어요. 아래 2단계의 ✨ AI 누끼를 누르면 음식만 오려내요.':''; S.adjManual=false;
   autoAdjust(); buildTplGrid();
@@ -689,6 +702,7 @@ document.querySelectorAll('[data-cut]').forEach(b=>b.onclick=()=>{ const c=b.dat
 for(const [id,k] of [['rEdge','edge'],['rSoft','soft']]) $(id).addEventListener('input',e=>{ S.refine[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
 $('aiModel').addEventListener('change',()=>{ if(S.aiRaw) runAI(); });
 $('openEditor').onclick=openEditor; setupEditor();
+$('aiPlate').addEventListener('change',e=>{ S.aiPlate=e.target.checked; syncCut(); schedule(); });
 for(const [id,k] of [['pSize','size'],['pX','x'],['pY','y']]) $(id).addEventListener('input',e=>{ S.plate[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
 $('bgFile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ S.bgCustom=await loadImg(URL.createObjectURL(f)); S.bg='custom'; S.bgTouched=true; buildBgGrid(); schedule(); }catch(err){} };
 $('brand').addEventListener('input',e=>{ S.brand=e.target.value; buildBgGrid(); schedule(); });
