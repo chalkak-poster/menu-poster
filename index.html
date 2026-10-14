@@ -72,6 +72,8 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
 .meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
 .cutopts{display:flex;flex-direction:column;gap:10px}
 .cutbtns{display:flex;flex-direction:column;gap:8px}
+.warn{background:var(--panel);border:1.5px solid var(--pop);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+@media (max-width:860px){ .warn{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6;box-shadow:0 8px 24px rgba(0,0,0,.2)} }
 .cut-ai{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border:2px solid var(--accent);text-align:left}
 .cut-ai b{font-size:16px}
 .cut-ai small{font-weight:400;font-size:12.5px;color:var(--muted)}
@@ -175,11 +177,11 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
         <button data-size="sq" aria-pressed="false">정사각 (인스타)</button>
         <button data-size="story" aria-pressed="false">스토리 9:16</button>
       </div>
-      <label class="f">가게 이름<input type="text" id="tStore" value="카페 온기" maxlength="20"></label>
-      <label class="f">메뉴 이름<input type="text" id="tMenu" value="토마토 바질 파스타" maxlength="22"></label>
-      <label class="f">한 줄 소개<input type="text" id="tCopy" value="매일 아침 직접 끓이는 토마토 소스" maxlength="34"></label>
+      <label class="f">가게 이름<input type="text" id="tStore" placeholder="상호명" maxlength="20"></label>
+      <label class="f">메뉴 이름<input type="text" id="tMenu" placeholder="메뉴 이름" maxlength="22"></label>
+      <label class="f">한 줄 소개<input type="text" id="tCopy" placeholder="한 줄 소개 문구" maxlength="34"></label>
       <div class="two">
-        <label class="f">가격<input type="text" id="tPrice" value="12,900원" maxlength="14"></label>
+        <label class="f">가격<input type="text" id="tPrice" placeholder="가격 (예: 12,900원)" maxlength="14"></label>
         <label class="f">강조 표시<select id="tBadge">
           <option value="">없음</option><option selected>NEW</option><option>BEST</option>
           <option>시즌 한정</option><option>오늘만</option><option>사장님 추천</option></select></label>
@@ -190,6 +192,10 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
   <section class="preview" aria-label="미리보기">
     <div class="stage"><canvas id="poster" width="1240" height="1754" aria-label="포스터 미리보기"></canvas></div>
     <div class="meta"><span id="dims">1240 × 1754 px · A4 150dpi</span><span id="renderInfo"></span></div>
+    <div class="warn" id="saveWarn" hidden role="alert">
+      <span id="saveWarnText"></span>
+      <div class="row"><button id="saveFill">입력하러 가기</button><button class="primary" id="saveAnyway">그대로 저장</button></div>
+    </div>
     <button class="primary big" id="dlBtn">포스터 PNG 저장</button>
   </section>
 </main>
@@ -202,7 +208,7 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
       <button data-tool="pan" aria-pressed="false">✋ 이동</button>
     </div>
     <div class="sl"><span>붓 크기</span><input type="range" id="brush" min="6" max="90" value="30"><output for="brush">30</output></div>
-    <div class="sl"><span>확대</span><input type="range" id="zoom" min="1" max="4" step="0.5" value="1"><output for="zoom">1×</output></div>
+    <div class="sl"><span>확대</span><input type="range" id="zoom" min="1" max="6" step="0.25" value="1"><output for="zoom">1×</output></div>
     <div class="row">
       <button id="edUndo">↶ 되돌리기</button>
       <button id="edReset">수정 전체 취소</button>
@@ -453,29 +459,45 @@ function drawEditor(){
 const redraw=()=>{ if(!ED.raf) ED.raf=requestAnimationFrame(drawEditor); };
 function brushPx(){ return +$('brush').value/(ED.fit*ED.zoom); } // 화면 기준 붓 크기를 이미지 픽셀로
 function toImg(e){ const cv=$('edCanvas'), r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height]; }
+function setZoom(z,ax,ay){ // (ax,ay) 화면 지점을 기준으로 확대·축소
+  const cv=$('edCanvas'), st=$('edStage'); z=Math.min(6,Math.max(1,z));
+  const r0=cv.getBoundingClientRect(); if(ax==null){ const sr=st.getBoundingClientRect(); ax=sr.left+sr.width/2; ay=sr.top+sr.height/2; }
+  const ix=(ax-r0.left)/r0.width, iy=(ay-r0.top)/r0.height;
+  ED.zoom=z; fitEditor();
+  const r1=cv.getBoundingClientRect();
+  st.scrollLeft+=(r1.left+ix*r1.width)-ax; st.scrollTop+=(r1.top+iy*r1.height)-ay;
+  $('zoom').value=z; $('zoom').nextElementSibling.value=(Math.round(z*10)/10)+'×'; redraw();
+}
 function setupEditor(){
-  const cv=$('edCanvas'), st=$('edStage');
+  const cv=$('edCanvas'), st=$('edStage'), P=new Map(); let pinch=null;
+  const mid=()=>{ const a=[...P.values()]; return {x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2,d:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)}; };
+  const cancelStroke=()=>{ if(!ED.drawing) return; ED.drawing=null; S.editVer++; buildFinalMask(); redraw(); }; // 그리던 선 취소
   cv.addEventListener('pointerdown',e=>{
-    e.preventDefault(); cv.setPointerCapture(e.pointerId);
+    e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} P.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(P.size===2){ cancelStroke(); ED.pan=null; const m=mid(); pinch={d0:m.d,z0:ED.zoom,last:m}; return; } // 두 손가락: 확대·이동
+    if(P.size>2) return;
     if(ED.tool==='pan'||e.button===1){ ED.pan={x:e.clientX,y:e.clientY,sl:st.scrollLeft,st:st.scrollTop}; return; }
-    const s={mode:ED.tool,size:brushPx(),pts:[toImg(e)]}; ED.drawing=s;
+    const s={mode:ED.tool,size:brushPx(),pts:[toImg(e)],id:e.pointerId}; ED.drawing=s;
     applyStroke(maskFinal.getContext('2d'),s); redraw();
   });
   cv.addEventListener('pointermove',e=>{
+    if(P.has(e.pointerId)) P.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pinch&&P.size>=2){ const m=mid(); st.scrollLeft-=m.x-pinch.last.x; st.scrollTop-=m.y-pinch.last.y;
+      setZoom(pinch.z0*m.d/Math.max(1,pinch.d0),m.x,m.y); pinch.last=m; return; }
     if(ED.pan){ st.scrollLeft=ED.pan.sl-(e.clientX-ED.pan.x); st.scrollTop=ED.pan.st-(e.clientY-ED.pan.y); return; }
-    const q=toImg(e); ED.hover=q;
-    if(ED.drawing){ const s=ED.drawing; s.pts.push(q); applyStroke(maskFinal.getContext('2d'),s,s.pts.length-2); }
+    const q=toImg(e); ED.hover=e.pointerType==='touch'?null:q;
+    if(ED.drawing&&ED.drawing.id===e.pointerId){ const s=ED.drawing; s.pts.push(q); applyStroke(maskFinal.getContext('2d'),s,s.pts.length-2); }
     redraw();
   });
-  const end=()=>{ if(ED.drawing){ S.strokes.push(ED.drawing); ED.drawing=null; maskFinalKey=maskAutoKey+'|'+S.strokes.length+'|'+S.editVer; } ED.pan=null; };
+  const end=e=>{ P.delete(e.pointerId);
+    if(ED.drawing&&ED.drawing.id===e.pointerId){ const s=ED.drawing; delete s.id; S.strokes.push(s); ED.drawing=null; maskFinalKey=maskAutoKey+'|'+S.strokes.length+'|'+S.editVer; }
+    if(P.size<2) pinch=null; if(!P.size) ED.pan=null; };
   cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end);
   cv.addEventListener('pointerleave',()=>{ ED.hover=null; redraw(); });
+  st.addEventListener('wheel',e=>{ e.preventDefault(); setZoom(ED.zoom*(e.deltaY<0?1.15:1/1.15),e.clientX,e.clientY); },{passive:false}); // PC: 휠 확대
   document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{ ED.tool=b.dataset.tool; document.querySelectorAll('[data-tool]').forEach(o=>o.setAttribute('aria-pressed',o===b)); cv.style.cursor=ED.tool==='pan'?'grab':'crosshair'; });
   $('brush').addEventListener('input',e=>{ e.target.nextElementSibling.value=e.target.value; });
-  $('zoom').addEventListener('input',e=>{ // 화면 가운데를 기준으로 확대
-    const cxr=(st.scrollLeft+st.clientWidth/2)/st.scrollWidth, cyr=(st.scrollTop+st.clientHeight/2)/st.scrollHeight;
-    ED.zoom=+e.target.value; e.target.nextElementSibling.value=ED.zoom+'×'; fitEditor();
-    st.scrollLeft=cxr*st.scrollWidth-st.clientWidth/2; st.scrollTop=cyr*st.scrollHeight-st.clientHeight/2; });
+  $('zoom').addEventListener('input',e=>setZoom(+e.target.value));
   $('edUndo').onclick=()=>{ if(!S.strokes.length) return; S.strokes.pop(); S.editVer++; buildFinalMask(); redraw(); };
   $('edReset').onclick=()=>{ S.strokes=[]; S.editVer++; buildFinalMask(); redraw(); };
   $('edDone').onclick=closeEditor;
@@ -587,7 +609,9 @@ const T = {
 };
 
 /* ───────── 렌더 ───────── */
-function texts(){ return { store:$('tStore').value.trim(), menu:$('tMenu').value.trim()||'메뉴 이름', copy:$('tCopy').value.trim(), price:$('tPrice').value.trim(), badge:$('tBadge').value }; }
+const FIELDS=[['tStore','store','상호명'],['tMenu','menu','메뉴 이름'],['tCopy','copy','한 줄 소개 문구'],['tPrice','price','가격']];
+function texts(){ const t={badge:$('tBadge').value}; for(const [id,k,ph] of FIELDS) t[k]=$(id).value.trim()||ph; return t; } // 빈 칸은 안내 문구로 미리보기
+const emptyFields=()=>FIELDS.filter(([id])=>!$(id).value.trim());
 const loadedFonts=new Set();
 async function ensureFonts(t){
   const sample=Object.values(t).join('')+'~0123456789,원'; const specs=['40px "Black Han Sans"','800 40px "Nanum Myeongjo"','700 40px "Nanum Myeongjo"','40px "Gowun Dodum"','700 40px "IBM Plex Sans KR"','400 40px "IBM Plex Sans KR"','600 40px "IBM Plex Sans KR"','40px "Nanum Pen Script"'];
@@ -662,9 +686,16 @@ $('brand').addEventListener('input',e=>{ S.brand=e.target.value; buildBgGrid(); 
 document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{ S.size=b.dataset.size; document.querySelectorAll('[data-size]').forEach(o=>o.setAttribute('aria-pressed',o===b)); schedule(); });
 for(const id of ['tStore','tMenu','tCopy','tPrice','tBadge']) $(id).addEventListener('input',schedule);
 
-$('dlBtn').onclick=async()=>{
+$('dlBtn').onclick=()=>{ const e=emptyFields(); // 빈 칸이 있으면 한 번 확인
+  if(!e.length){ savePoster(); return; }
+  $('saveWarnText').textContent=`${e.map(f=>f[2]).join(', ')} 칸이 아직 비어 있어요. 지금은 안내 문구가 그대로 들어가요. 그대로 저장할까요?`;
+  $('saveWarn').hidden=false; };
+$('saveAnyway').onclick=()=>{ $('saveWarn').hidden=true; savePoster(); };
+$('saveFill').onclick=()=>{ $('saveWarn').hidden=true; const f=$(emptyFields()[0][0]); f.scrollIntoView({block:'center',behavior:'smooth'}); setTimeout(()=>f.focus(),300); };
+for(const [id] of FIELDS) $(id).addEventListener('input',()=>{ if(!emptyFields().length) $('saveWarn').hidden=true; });
+async function savePoster(){
   await render(); const btn=$('dlBtn'); btn.disabled=true;
-  const name=`${(texts().menu||'poster').replace(/[\\/:*?"<>|]/g,'')}_포스터.png`;
+  const name=`${($('tMenu').value.trim()||'메뉴').replace(/[\\/:*?"<>|]/g,'')}_포스터.png`;
   const blob=await new Promise(r=>poster.toBlob(r,'image/png'));
   const done=()=>{ btn.disabled=false; btn.textContent='저장했어요 ✓ 다시 저장'; };
   if(dl){ // claude.ai 링크(모바일 포함): 저장 확인창 → 폰에서는 공유/사진 저장
