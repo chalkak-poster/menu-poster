@@ -24,6 +24,7 @@
   --bg:#141a18; --panel:#1c2421; --ink:#e8ece9; --muted:#9aa6a1; --line:#2d3834;
   --accent:#5fbfa0; --accent-ink:#0f1513; --pop:#f0b93a; --chip:#24302c; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-ui);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
@@ -70,6 +71,19 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
 #poster{max-width:100%;max-height:calc(100vh - 190px);height:auto;box-shadow:0 10px 30px rgba(0,0,0,.18);border-radius:2px}
 .meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
 .cutopts{display:flex;flex-direction:column;gap:10px}
+.cutbtns{display:flex;flex-direction:column;gap:8px}
+.cut-ai{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border:2px solid var(--accent);text-align:left}
+.cut-ai b{font-size:16px}
+.cut-ai small{font-weight:400;font-size:12.5px;color:var(--muted)}
+.cut-ai[aria-pressed="true"] small{color:inherit;opacity:.85}
+.editor{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;gap:10px;
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.ed-bar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.ed-bar .sl{grid-template-columns:52px 120px 34px;flex:none}
+.ed-stage{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:10px;
+  background:repeating-conic-gradient(var(--chip) 0 25%,var(--panel) 0 50%) 0 0/20px 20px;display:flex;padding:8px}
+#edCanvas{display:block;flex:none;margin:auto;touch-action:none;cursor:crosshair;max-width:none}
+.ed-title{font-weight:700;font-size:15px;margin:0}
 .cutopts[hidden]{display:none!important}
 @media (max-width:860px){
   body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
@@ -119,10 +133,22 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
     <!-- 3. 누끼 + 배경 -->
     <div class="step">
       <h2><span class="n">3</span>배경 바꾸기</h2>
-      <div class="row" role="group" aria-label="음식 오려내기 방식">
-        <button data-cut="none" aria-pressed="false">원본 사진 그대로</button>
-        <button data-cut="plate" aria-pressed="true">접시 원형으로 오리기</button>
-        <button data-cut="ai" aria-pressed="false">AI 누끼</button>
+      <div class="cutbtns" role="group" aria-label="음식 오려내기 방식">
+        <button data-cut="ai" class="cut-ai" aria-pressed="false"><b>✨ AI 누끼</b><small>추천 · 음식만 자동으로 오려내요</small></button>
+        <div class="row">
+          <button data-cut="plate" aria-pressed="true">접시 원형으로 오리기</button>
+          <button data-cut="none" aria-pressed="false">원본 사진 그대로</button>
+        </div>
+      </div>
+      <div class="cutopts" id="aiOpts" hidden>
+        <button class="primary" id="openEditor">✏️ 직접 수정하기 (지우개 · 복원)</button>
+        <div class="sl"><span>가장자리</span><input type="range" id="rEdge" min="-3" max="3" value="1"><output for="rEdge">1</output></div>
+        <div class="sl"><span>부드럽게</span><input type="range" id="rSoft" min="0" max="3" value="1"><output for="rSoft">1</output></div>
+        <p class="hint">가장자리를 +로 올리면 안쪽으로 깎아서 남은 배경 테두리를 없애요. −는 반대로 넓혀요.</p>
+        <label class="f">AI 모델<select id="aiModel">
+          <option value="auto">자동 (폰은 빠름, PC는 고화질)</option>
+          <option value="isnet_quint8">빠름 · 약 40MB</option>
+          <option value="isnet_fp16">고화질 · 약 80MB</option></select></label>
       </div>
       <div class="cutopts" id="plateOpts">
         <div class="sl"><span>원 크기</span><input type="range" id="pSize" min="30" max="100" value="86"><output for="pSize">86</output></div>
@@ -167,6 +193,26 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
     <button class="primary big" id="dlBtn">포스터 PNG 저장</button>
   </section>
 </main>
+<div class="editor" id="editor" hidden role="dialog" aria-label="누끼 직접 수정">
+  <div class="ed-bar">
+    <p class="ed-title">누끼 직접 수정</p>
+    <div class="row" role="group" aria-label="도구">
+      <button data-tool="erase" aria-pressed="true">🧽 지우개</button>
+      <button data-tool="restore" aria-pressed="false">🖌️ 복원</button>
+      <button data-tool="pan" aria-pressed="false">✋ 이동</button>
+    </div>
+    <div class="sl"><span>붓 크기</span><input type="range" id="brush" min="6" max="90" value="30"><output for="brush">30</output></div>
+    <div class="sl"><span>확대</span><input type="range" id="zoom" min="1" max="4" step="0.5" value="1"><output for="zoom">1×</output></div>
+    <div class="row">
+      <button id="edUndo">↶ 되돌리기</button>
+      <button id="edReset">수정 전체 취소</button>
+      <button class="primary" id="edDone">완료</button>
+    </div>
+  </div>
+  <div class="ed-stage" id="edStage"><canvas id="edCanvas" aria-label="누끼 수정 화면"></canvas></div>
+  <p class="hint">흐릿하게 보이는 부분이 지워진 영역이에요. 지우개로 남은 배경을 문지르고, 복원 붓으로 잘린 음식을 되살리세요. 확대한 뒤에는 ✋ 이동으로 화면을 옮겨요.</p>
+</div>
+
 
 <script>
 "use strict";
@@ -174,7 +220,7 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
 const S = {
   src:null, srcBlob:null, srcName:'sample',
   adj:{bright:0,contrast:0,sat:0,warm:0,sharp:0},
-  cut:'plate', plate:{size:86,x:0,y:0}, aiMask:null,
+  cut:'plate', plate:{size:86,x:0,y:0}, aiRaw:null, aiStamp:0, refine:{edge:1,soft:1}, strokes:[], editVer:0,
   bg:'oak', bgCat:'전체', bgCustom:null, brand:'#c8452d',
   tpl:'classic', size:'a4', bgTouched:false,
 };
@@ -267,8 +313,73 @@ function setAdj(o){ Object.assign(S.adj,o); for(const k in S.adj){ $(k).value=S.
 
 /* ───────── 2. 오려내기 (누끼) ───────── */
 let foodCanvas=null, foodKey='';
+let maskAuto=null, maskAutoKey='', maskFinal=null, maskFinalKey='';
+// ── 마스크 다듬기용 도구 (알파값 배열 a: 0~1) ──
+function labelComp(bin,W,H){ // 4방향 연결 영역 번호 매기기
+  const N=W*H, lab=new Int32Array(N).fill(-1), q=new Int32Array(N), sizes=[];
+  for(let s=0;s<N;s++){ if(!bin[s]||lab[s]>=0) continue; const L=sizes.length; let h=0,t=0; q[t++]=s; lab[s]=L;
+    while(h<t){ const i=q[h++], x=i%W;
+      if(x>0&&bin[i-1]&&lab[i-1]<0){lab[i-1]=L;q[t++]=i-1;}
+      if(x<W-1&&bin[i+1]&&lab[i+1]<0){lab[i+1]=L;q[t++]=i+1;}
+      if(i>=W&&bin[i-W]&&lab[i-W]<0){lab[i-W]=L;q[t++]=i-W;}
+      if(i<N-W&&bin[i+W]&&lab[i+W]<0){lab[i+W]=L;q[t++]=i+W;} }
+    sizes.push(t); }
+  return {lab,sizes};
+}
+function filt1(src,W,H,r,fn,horiz){ // 분리형 필터 한 방향 (max/min/mean)
+  const out=new Float32Array(src.length);
+  if(horiz){ for(let y=0;y<H;y++){ const o=y*W; for(let x=0;x<W;x++){ let v=fn==='mean'?0:src[o+x], n=0;
+      for(let k=-r;k<=r;k++){ const xx=Math.min(W-1,Math.max(0,x+k)), s=src[o+xx]; if(fn==='max'){ if(s>v)v=s; } else if(fn==='min'){ if(s<v)v=s; } else { v+=s; n++; } }
+      out[o+x]=fn==='mean'?v/n:v; } } }
+  else { for(let x=0;x<W;x++){ for(let y=0;y<H;y++){ let v=fn==='mean'?0:src[y*W+x], n=0;
+      for(let k=-r;k<=r;k++){ const yy=Math.min(H-1,Math.max(0,y+k)), s=src[yy*W+x]; if(fn==='max'){ if(s>v)v=s; } else if(fn==='min'){ if(s<v)v=s; } else { v+=s; n++; } }
+      out[y*W+x]=fn==='mean'?v/n:v; } } }
+  return out;
+}
+const filt=(a,W,H,r,fn)=>r>0?filt1(filt1(a,W,H,r,fn,true),W,H,r,fn,false):a;
+
+function buildAutoMask(){ // AI가 준 마스크 → 다듬기 (반투명 정리, 얼룩 제거, 구멍 메우기, 가장자리 조절)
+  const p=applyAdj(), W=p.width, H=p.height;
+  const key=S.aiStamp+'|'+W+'x'+H+'|'+S.refine.edge+'|'+S.refine.soft;
+  if(maskAuto && key===maskAutoKey) return maskAuto;
+  const c=mk(W,H), x=c.getContext('2d',{willReadFrequently:true});
+  x.imageSmoothingQuality='high'; x.drawImage(S.aiRaw,0,0,W,H);
+  const id=x.getImageData(0,0,W,H), d=id.data, N=W*H; let a=new Float32Array(N);
+  for(let i=0;i<N;i++){ const t=Math.min(1,Math.max(0,(d[i*4+3]/255-0.28)/0.44)); a[i]=t*t*(3-2*t); } // 희미한 반투명 정리
+  // 큰 덩어리만 남기기 (가장 큰 덩어리의 4% 미만인 얼룩 제거)
+  const bin=new Uint8Array(N); for(let i=0;i<N;i++) bin[i]=a[i]>=0.5?1:0;
+  const {lab,sizes}=labelComp(bin,W,H); let big=0; for(const s of sizes) if(s>big) big=s;
+  const keep=new Float32Array(N); for(let i=0;i<N;i++) keep[i]=(lab[i]>=0&&sizes[lab[i]]>=big*0.04)?1:0;
+  const near=filt(keep,W,H,3,'max'); for(let i=0;i<N;i++) a[i]*=near[i]; // 남긴 덩어리 주변의 부드러운 가장자리만 유지
+  // 구멍 메우기 (음식 면적의 3% 미만인 빈 곳)
+  const hole=new Uint8Array(N); for(let i=0;i<N;i++) hole[i]=a[i]<0.5?1:0;
+  const hc=labelComp(hole,W,H), touches=new Uint8Array(hc.sizes.length);
+  for(let x2=0;x2<W;x2++){ const t1=hc.lab[x2], t2=hc.lab[N-W+x2]; if(t1>=0)touches[t1]=1; if(t2>=0)touches[t2]=1; }
+  for(let y=0;y<H;y++){ const t1=hc.lab[y*W], t2=hc.lab[y*W+W-1]; if(t1>=0)touches[t1]=1; if(t2>=0)touches[t2]=1; }
+  for(let i=0;i<N;i++){ const L=hc.lab[i]; if(L>=0&&!touches[L]&&hc.sizes[L]<big*0.03) a[i]=1; }
+  // 가장자리: +면 안쪽으로 깎아 배경 테두리 제거, -면 넓힘
+  const e=S.refine.edge; if(e>0) a=filt(a,W,H,e,'min'); else if(e<0) a=filt(a,W,H,-e,'max');
+  if(S.refine.soft>0) a=filt(a,W,H,S.refine.soft,'mean');
+  for(let i=0;i<N;i++){ d[i*4]=d[i*4+1]=d[i*4+2]=0; d[i*4+3]=Math.round(a[i]*255); }
+  x.putImageData(id,0,0); maskAuto=c; maskAutoKey=key; return c;
+}
+function applyStroke(x,s,from=0){ // 직접 수정 붓질을 마스크에 반영
+  x.save(); x.globalCompositeOperation=s.mode==='erase'?'destination-out':'source-over';
+  x.strokeStyle=x.fillStyle='#000'; x.lineWidth=s.size; x.lineCap=x.lineJoin='round';
+  const P=s.pts;
+  if(P.length===1||from>=P.length-1){ const q=P[P.length-1]; x.beginPath(); x.arc(q[0],q[1],s.size/2,0,7); x.fill(); }
+  else { x.beginPath(); x.moveTo(P[from][0],P[from][1]); for(let i=from+1;i<P.length;i++) x.lineTo(P[i][0],P[i][1]); x.stroke(); }
+  x.restore();
+}
+function buildFinalMask(){
+  const ma=buildAutoMask(), key=maskAutoKey+'|'+S.strokes.length+'|'+S.editVer;
+  if(maskFinal && key===maskFinalKey) return maskFinal;
+  const c=mk(ma.width,ma.height), x=c.getContext('2d'); x.drawImage(ma,0,0);
+  for(const s of S.strokes) applyStroke(x,s);
+  maskFinal=c; maskFinalKey=key; return c;
+}
 function getFood(){
-  const p=applyAdj(); const key=procKey+'|'+S.cut+'|'+JSON.stringify(S.plate)+'|'+(S.aiMask?1:0);
+  const p=applyAdj(); const key=procKey+'|'+S.cut+'|'+JSON.stringify(S.plate)+'|'+(S.cut==='ai'&&S.aiRaw?(buildFinalMask(),maskFinalKey):'');
   if(foodCanvas && key===foodKey) return foodCanvas;
   let out;
   if(S.cut==='plate'){
@@ -279,35 +390,97 @@ function getFood(){
     x.globalCompositeOperation='destination-in';
     const g=x.createRadialGradient(d/2,d/2,d/2*0.94,d/2,d/2,d/2); g.addColorStop(0,'#000'); g.addColorStop(1,'rgba(0,0,0,0)');
     x.fillStyle=g; x.beginPath(); x.arc(d/2,d/2,d/2,0,7); x.fill();
-  } else if(S.cut==='ai' && S.aiMask){
+  } else if(S.cut==='ai' && S.aiRaw){
     const w=p.width,h=p.height, t=mk(w,h), x=t.getContext('2d',{willReadFrequently:true});
-    x.drawImage(p,0,0); x.globalCompositeOperation='destination-in'; x.drawImage(S.aiMask,0,0,w,h);
-    // 투명 영역 잘라내기
-    const d=x.getImageData(0,0,w,h).data; let x0=w,y0=h,x1=0,y1=0;
+    x.drawImage(p,0,0); x.globalCompositeOperation='destination-in'; x.drawImage(buildFinalMask(),0,0);
+    const d=x.getImageData(0,0,w,h).data; let x0=w,y0=h,x1=0,y1=0; // 투명 여백 잘라내기
     for(let y=0;y<h;y+=2) for(let xx=0;xx<w;xx+=2){ if(d[(y*w+xx)*4+3]>20){ if(xx<x0)x0=xx; if(xx>x1)x1=xx; if(y<y0)y0=y; if(y>y1)y1=y; } }
     if(x1<=x0){ out=t; } else { out=mk(x1-x0+2,y1-y0+2); out.getContext('2d').drawImage(t,-x0,-y0); }
   } else out=p;
   foodCanvas=out; foodKey=key; return out;
 }
 let imglyMod=null;
+const isPhone=()=>matchMedia('(pointer:coarse)').matches;
+function aiModel(){ const v=$('aiModel').value; return v!=='auto'?v:(isPhone()?'isnet_quint8':'isnet_fp16'); }
 async function runAI(){
-  const st=$('aiStatus'); st.className='status'; st.textContent='AI 모델을 불러오는 중… (처음 한 번만 약 40MB, 이후엔 바로 처리)';
-  document.querySelectorAll('[data-cut]').forEach(b=>b.disabled=true);
+  const st=$('aiStatus'), model=aiModel(), mb=model==='isnet_fp16'?80:40, btn=document.querySelector('[data-cut="ai"] b');
+  st.className='status'; st.textContent=`AI 모델을 불러오는 중… (처음 한 번만 약 ${mb}MB, 이후엔 바로 처리)`;
+  document.querySelectorAll('[data-cut]').forEach(b=>b.disabled=true); btn.textContent='✨ AI 처리 중…';
   try{
     if(!imglyMod) imglyMod=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
-    // 폰 메모리를 아끼기 위해 긴 변 1024px로 줄여서 처리 (마스크는 원래 크기로 늘려 씀)
+    // 모델 입력이 1024px이라 긴 변 1024px로 줄여 보냄 (폰 메모리 절약, 마스크는 원래 크기로 늘려 다듬음)
     if(!baseCanvas) baseCanvas=procSource();
     const k=Math.min(1,1024/Math.max(baseCanvas.width,baseCanvas.height)), sc=mk(Math.round(baseCanvas.width*k),Math.round(baseCanvas.height*k));
     sc.getContext('2d').drawImage(baseCanvas,0,0,sc.width,sc.height);
     const blob=await new Promise(r=>sc.toBlob(r,'image/jpeg',.92));
-    const res=await imglyMod.removeBackground(blob,{ model:'isnet_quint8', progress:(k,c,t)=>{ if(t) st.textContent=`AI 처리 준비 ${Math.round(c/t*100)}%`; } });
-    const img=await loadImg(URL.createObjectURL(res)); S.aiMask=img; st.textContent='AI 누끼 완료 · 이 기기에서 처리되어 서버 비용이 들지 않았어요.';
+    const t0=performance.now();
+    const res=await imglyMod.removeBackground(blob,{ model, progress:(key,c,t)=>{ if(t) st.textContent=`AI 모델 받는 중 ${Math.round(c/t*100)}%`; } });
+    S.aiRaw=await loadImg(URL.createObjectURL(res)); S.aiStamp=Date.now(); S.strokes=[]; S.editVer++;
+    st.textContent=`AI 누끼 완료 (${model==='isnet_fp16'?'고화질':'빠름'} 모델, ${((performance.now()-t0)/1000).toFixed(1)}초) · 이 기기에서 처리되어 서버 비용 0원. 아쉬운 부분은 “직접 수정하기”로 다듬으세요.`;
     S.cut='ai'; syncCut(); schedule();
   }catch(e){
     console.warn(e); st.className='status err';
     st.textContent='AI 누끼를 불러오지 못했어요. 인터넷 연결을 확인해 주세요. (claude.ai 링크에서는 보안 제한으로 안 돼요) 지금은 “접시 원형으로 오리기”를 써 주세요.';
-    S.cut=S.aiMask?'ai':'plate'; syncCut(); schedule();
-  }finally{ document.querySelectorAll('[data-cut]').forEach(b=>b.disabled=false); }
+    S.cut=S.aiRaw?'ai':'plate'; syncCut(); schedule();
+  }finally{ document.querySelectorAll('[data-cut]').forEach(b=>b.disabled=false); btn.textContent='✨ AI 누끼'; }
+}
+
+/* ───────── 2-1. 누끼 직접 수정 (지우개 / 복원 붓) ───────── */
+const ED={tool:'erase', zoom:1, fit:1, drawing:null, pan:null, hover:null, raf:0, cut:null};
+function openEditor(){
+  if(!S.aiRaw) return;
+  $('editor').hidden=false; document.body.style.overflow='hidden';
+  const m=buildFinalMask(), cv=$('edCanvas'); cv.width=m.width; cv.height=m.height;
+  ED.cut=mk(m.width,m.height); ED.zoom=1; $('zoom').value=1; $('zoom').nextElementSibling.value='1×';
+  requestAnimationFrame(()=>{ fitEditor(); drawEditor(); });
+}
+function closeEditor(){ $('editor').hidden=true; document.body.style.overflow=''; foodCanvas=null; schedule(); }
+function fitEditor(){
+  const st=$('edStage'), cv=$('edCanvas');
+  ED.fit=Math.min((st.clientWidth-16)/cv.width,(st.clientHeight-16)/cv.height);
+  cv.style.width=Math.round(cv.width*ED.fit*ED.zoom)+'px'; cv.style.height=Math.round(cv.height*ED.fit*ED.zoom)+'px';
+}
+function drawEditor(){
+  ED.raf=0; const cv=$('edCanvas'), x=cv.getContext('2d'), p=applyAdj(), m=maskFinal;
+  const cx=ED.cut.getContext('2d'); cx.globalCompositeOperation='source-over'; cx.clearRect(0,0,m.width,m.height);
+  cx.drawImage(p,0,0); cx.globalCompositeOperation='destination-in'; cx.drawImage(m,0,0);
+  x.clearRect(0,0,cv.width,cv.height);
+  x.globalAlpha=.22; x.drawImage(p,0,0); x.globalAlpha=1; // 지워진 부분은 흐리게
+  x.drawImage(ED.cut,0,0);
+  if(ED.hover && ED.tool!=='pan'){ const r=brushPx()/2; x.lineWidth=Math.max(1.5,2/(ED.fit*ED.zoom));
+    x.strokeStyle=ED.tool==='erase'?'#e5484d':'#2fb36d'; x.beginPath(); x.arc(ED.hover[0],ED.hover[1],r,0,7); x.stroke(); }
+}
+const redraw=()=>{ if(!ED.raf) ED.raf=requestAnimationFrame(drawEditor); };
+function brushPx(){ return +$('brush').value/(ED.fit*ED.zoom); } // 화면 기준 붓 크기를 이미지 픽셀로
+function toImg(e){ const cv=$('edCanvas'), r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height]; }
+function setupEditor(){
+  const cv=$('edCanvas'), st=$('edStage');
+  cv.addEventListener('pointerdown',e=>{
+    e.preventDefault(); cv.setPointerCapture(e.pointerId);
+    if(ED.tool==='pan'||e.button===1){ ED.pan={x:e.clientX,y:e.clientY,sl:st.scrollLeft,st:st.scrollTop}; return; }
+    const s={mode:ED.tool,size:brushPx(),pts:[toImg(e)]}; ED.drawing=s;
+    applyStroke(maskFinal.getContext('2d'),s); redraw();
+  });
+  cv.addEventListener('pointermove',e=>{
+    if(ED.pan){ st.scrollLeft=ED.pan.sl-(e.clientX-ED.pan.x); st.scrollTop=ED.pan.st-(e.clientY-ED.pan.y); return; }
+    const q=toImg(e); ED.hover=q;
+    if(ED.drawing){ const s=ED.drawing; s.pts.push(q); applyStroke(maskFinal.getContext('2d'),s,s.pts.length-2); }
+    redraw();
+  });
+  const end=()=>{ if(ED.drawing){ S.strokes.push(ED.drawing); ED.drawing=null; maskFinalKey=maskAutoKey+'|'+S.strokes.length+'|'+S.editVer; } ED.pan=null; };
+  cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end);
+  cv.addEventListener('pointerleave',()=>{ ED.hover=null; redraw(); });
+  document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{ ED.tool=b.dataset.tool; document.querySelectorAll('[data-tool]').forEach(o=>o.setAttribute('aria-pressed',o===b)); cv.style.cursor=ED.tool==='pan'?'grab':'crosshair'; });
+  $('brush').addEventListener('input',e=>{ e.target.nextElementSibling.value=e.target.value; });
+  $('zoom').addEventListener('input',e=>{ // 화면 가운데를 기준으로 확대
+    const cxr=(st.scrollLeft+st.clientWidth/2)/st.scrollWidth, cyr=(st.scrollTop+st.clientHeight/2)/st.scrollHeight;
+    ED.zoom=+e.target.value; e.target.nextElementSibling.value=ED.zoom+'×'; fitEditor();
+    st.scrollLeft=cxr*st.scrollWidth-st.clientWidth/2; st.scrollTop=cyr*st.scrollHeight-st.clientHeight/2; });
+  $('edUndo').onclick=()=>{ if(!S.strokes.length) return; S.strokes.pop(); S.editVer++; buildFinalMask(); redraw(); };
+  $('edReset').onclick=()=>{ S.strokes=[]; S.editVer++; buildFinalMask(); redraw(); };
+  $('edDone').onclick=closeEditor;
+  document.addEventListener('keydown',e=>{ if($('editor').hidden) return; if(e.key==='Escape') closeEditor(); if((e.ctrlKey||e.metaKey)&&e.key==='z'){ e.preventDefault(); $('edUndo').click(); } });
+  addEventListener('resize',()=>{ if(!$('editor').hidden){ fitEditor(); } });
 }
 
 /* ───────── 3. 배경 라이브러리: 미리 만들어 둔 이미지(생성 비용 1회) ───────── */
@@ -455,12 +628,13 @@ function buildTplGrid(){
     x.drawImage(big,0,0,150,150); b.append(c); const sp=document.createElement('span'); sp.textContent=T[k].name; b.append(sp);
     b.onclick=()=>{ S.tpl=k; if(!S.bgTouched) S.bg=T[k].bg; buildTplGrid(); buildBgGrid(); schedule(); }; g.append(b); }
 }
-function syncCut(){ document.querySelectorAll('[data-cut]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.cut===S.cut)); $('plateOpts').hidden=S.cut!=='plate'; }
+function syncCut(){ document.querySelectorAll('[data-cut]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.cut===S.cut)); $('plateOpts').hidden=S.cut!=='plate'; $('aiOpts').hidden=!(S.cut==='ai'&&S.aiRaw); }
 
 /* ───────── 입력 연결 ───────── */
 async function setSource(img,blob,name){
-  S.src=img; S.srcBlob=blob; S.srcName=name+':'+Date.now(); S.aiMask=null; baseCanvas=null; processed=null; foodCanvas=null;
-  if(S.cut==='ai') S.cut='plate'; syncCut(); $('aiStatus').textContent='';
+  S.src=img; S.srcBlob=blob; S.srcName=name+':'+Date.now(); S.aiRaw=null; S.strokes=[]; baseCanvas=null; processed=null; foodCanvas=null; maskAuto=null; maskFinal=null;
+  if(S.cut==='ai') S.cut='plate'; syncCut(); $('aiStatus').className='status';
+  $('aiStatus').textContent=blob?'사진이 올라갔어요. 위의 ✨ AI 누끼를 누르면 음식만 오려내요.':'';
   autoAdjust(); buildTplGrid();
 }
 async function handleFile(f){
@@ -478,7 +652,10 @@ document.addEventListener('paste',e=>{ const it=[...(e.clipboardData?.items||[])
 for(const k of ['bright','contrast','sat','warm','sharp']) $(k).addEventListener('input',e=>{ S.adj[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
 $('autoBtn').onclick=autoAdjust;
 $('resetAdj').onclick=()=>setAdj({bright:0,contrast:0,sat:0,warm:0,sharp:0});
-document.querySelectorAll('[data-cut]').forEach(b=>b.onclick=()=>{ const c=b.dataset.cut; if(c==='ai'&&!S.aiMask){ runAI(); return; } S.cut=c; syncCut(); schedule(); });
+document.querySelectorAll('[data-cut]').forEach(b=>b.onclick=()=>{ const c=b.dataset.cut; if(c==='ai'&&!S.aiRaw){ runAI(); return; } S.cut=c; syncCut(); schedule(); });
+for(const [id,k] of [['rEdge','edge'],['rSoft','soft']]) $(id).addEventListener('input',e=>{ S.refine[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
+$('aiModel').addEventListener('change',()=>{ if(S.aiRaw) runAI(); });
+$('openEditor').onclick=openEditor; setupEditor();
 for(const [id,k] of [['pSize','size'],['pX','x'],['pY','y']]) $(id).addEventListener('input',e=>{ S.plate[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
 $('bgFile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ S.bgCustom=await loadImg(URL.createObjectURL(f)); S.bg='custom'; S.bgTouched=true; buildBgGrid(); schedule(); }catch(err){} };
 $('brand').addEventListener('input',e=>{ S.brand=e.target.value; buildBgGrid(); schedule(); });
