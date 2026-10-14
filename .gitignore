@@ -8,3 +8,9 @@
 !LICENSE
 !.gitignore
 !.nojekyll
+# 원본 코드 백업 (빌드 결과물은 제외)
+!project/
+!project/**
+project/index.html
+project/site/
+project/dist/

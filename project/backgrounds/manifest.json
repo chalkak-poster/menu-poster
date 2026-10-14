@@ -1,0 +1,182 @@
+[
+ {
+  "id": "oak",
+  "name": "오크 원목",
+  "cat": "나무",
+  "tone": "dark"
+ },
+ {
+  "id": "ash",
+  "name": "밝은 원목",
+  "cat": "나무",
+  "tone": "light"
+ },
+ {
+  "id": "walnut",
+  "name": "월넛",
+  "cat": "나무",
+  "tone": "dark"
+ },
+ {
+  "id": "whitewash",
+  "name": "화이트워시 나무",
+  "cat": "나무",
+  "tone": "light"
+ },
+ {
+  "id": "board",
+  "name": "도마 세로결",
+  "cat": "나무",
+  "tone": "dark"
+ },
+ {
+  "id": "marble",
+  "name": "화이트 대리석",
+  "cat": "돌",
+  "tone": "light"
+ },
+ {
+  "id": "blackmarble",
+  "name": "블랙 골드 대리석",
+  "cat": "돌",
+  "tone": "dark"
+ },
+ {
+  "id": "concrete",
+  "name": "콘크리트",
+  "cat": "돌",
+  "tone": "light"
+ },
+ {
+  "id": "terrazzo",
+  "name": "테라조",
+  "cat": "돌",
+  "tone": "light"
+ },
+ {
+  "id": "slate",
+  "name": "슬레이트",
+  "cat": "돌",
+  "tone": "dark"
+ },
+ {
+  "id": "travertine",
+  "name": "트래버틴",
+  "cat": "돌",
+  "tone": "light"
+ },
+ {
+  "id": "linen",
+  "name": "베이지 리넨",
+  "cat": "천",
+  "tone": "light"
+ },
+ {
+  "id": "navylinen",
+  "name": "네이비 리넨",
+  "cat": "천",
+  "tone": "dark"
+ },
+ {
+  "id": "gingham",
+  "name": "레드 깅엄",
+  "cat": "천",
+  "tone": "light"
+ },
+ {
+  "id": "kraft",
+  "name": "크라프트지",
+  "cat": "종이",
+  "tone": "light"
+ },
+ {
+  "id": "hanji",
+  "name": "한지",
+  "cat": "종이",
+  "tone": "light"
+ },
+ {
+  "id": "pink",
+  "name": "파스텔 핑크",
+  "cat": "종이",
+  "tone": "light"
+ },
+ {
+  "id": "mint",
+  "name": "파스텔 민트",
+  "cat": "종이",
+  "tone": "light"
+ },
+ {
+  "id": "lavender",
+  "name": "라벤더",
+  "cat": "종이",
+  "tone": "light"
+ },
+ {
+  "id": "cream",
+  "name": "크림 화이트",
+  "cat": "종이",
+  "tone": "light"
+ },
+ {
+  "id": "spotlight",
+  "name": "스포트라이트",
+  "cat": "분위기",
+  "tone": "dark"
+ },
+ {
+  "id": "smoke",
+  "name": "스모크 블랙",
+  "cat": "분위기",
+  "tone": "dark"
+ },
+ {
+  "id": "cafebokeh",
+  "name": "카페 조명",
+  "cat": "분위기",
+  "tone": "dark"
+ },
+ {
+  "id": "nightbokeh",
+  "name": "밤 조명",
+  "cat": "분위기",
+  "tone": "dark"
+ },
+ {
+  "id": "leafshadow",
+  "name": "나뭇잎 그림자",
+  "cat": "계절",
+  "tone": "light"
+ },
+ {
+  "id": "palm",
+  "name": "야자수 그림자",
+  "cat": "계절",
+  "tone": "light"
+ },
+ {
+  "id": "cherry",
+  "name": "벚꽃",
+  "cat": "계절",
+  "tone": "light"
+ },
+ {
+  "id": "autumn",
+  "name": "가을 단풍",
+  "cat": "계절",
+  "tone": "dark"
+ },
+ {
+  "id": "christmas",
+  "name": "크리스마스",
+  "cat": "계절",
+  "tone": "dark"
+ },
+ {
+  "id": "water",
+  "name": "여름 물결",
+  "cat": "계절",
+  "tone": "light"
+ }
+]

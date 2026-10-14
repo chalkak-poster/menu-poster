@@ -7,4 +7,8 @@ https://chalkak-poster.github.io/menu-poster
 - 사진은 서버로 전송되지 않습니다.
 - AI 누끼: [@imgly/background-removal](https://github.com/imgly/background-removal-js) (AGPL-3.0)
 
+## 저장소 구성
+- 맨 위 폴더: 운영 중인 웹사이트 파일 (GitHub Pages)
+- `project/`: 원본 코드(`src/app.html`), 빌드 도구(`tools/`), 배경 이미지(`backgrounds/`) — 자세한 내용은 [project/README.md](project/README.md)
+
 이 저장소의 코드는 AGPL-3.0 라이선스를 따릅니다 (LICENSE 참고). © 2026 행운랩스
