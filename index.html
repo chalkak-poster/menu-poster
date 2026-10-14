@@ -120,21 +120,9 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
       <div class="status" id="srcStatus">지금은 샘플 사진이 들어가 있어요.</div>
     </div>
 
-    <!-- 2. 보정 -->
+    <!-- 2. 누끼 -->
     <div class="step">
-      <h2><span class="n">2</span>사진 보정</h2>
-      <button class="primary" id="autoBtn">✨ 자동 보정</button>
-      <div class="sl"><span>밝기</span><input type="range" id="bright" min="-50" max="50" value="0"><output for="bright">0</output></div>
-      <div class="sl"><span>대비</span><input type="range" id="contrast" min="-50" max="50" value="0"><output for="contrast">0</output></div>
-      <div class="sl"><span>채도</span><input type="range" id="sat" min="-50" max="80" value="0"><output for="sat">0</output></div>
-      <div class="sl"><span>따뜻함</span><input type="range" id="warm" min="-50" max="50" value="0"><output for="warm">0</output></div>
-      <div class="sl"><span>선명도</span><input type="range" id="sharp" min="0" max="100" value="0"><output for="sharp">0</output></div>
-      <button id="resetAdj">보정 초기화</button>
-    </div>
-
-    <!-- 3. 누끼 + 배경 -->
-    <div class="step">
-      <h2><span class="n">3</span>배경 바꾸기</h2>
+      <h2><span class="n">2</span>음식만 오려내기 (누끼)</h2>
       <div class="cutbtns" role="group" aria-label="음식 오려내기 방식">
         <button data-cut="ai" class="cut-ai" aria-pressed="false"><b>✨ AI 누끼</b><small>추천 · 음식만 자동으로 오려내요</small></button>
         <div class="row">
@@ -142,6 +130,7 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
           <button data-cut="none" aria-pressed="false">원본 사진 그대로</button>
         </div>
       </div>
+      <div class="status" id="aiStatus"></div>
       <div class="cutopts" id="aiOpts" hidden>
         <button class="primary" id="openEditor">✏️ 직접 수정하기 (지우개 · 복원)</button>
         <div class="sl"><span>가장자리</span><input type="range" id="rEdge" min="-3" max="3" value="1"><output for="rEdge">1</output></div>
@@ -157,7 +146,23 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
         <div class="sl"><span>좌우</span><input type="range" id="pX" min="-40" max="40" value="0"><output for="pX">0</output></div>
         <div class="sl"><span>위아래</span><input type="range" id="pY" min="-40" max="40" value="0"><output for="pY">0</output></div>
       </div>
-      <div class="status" id="aiStatus"></div>
+    </div>
+
+    <!-- 3. 보정 -->
+    <div class="step">
+      <h2><span class="n">3</span>사진 보정</h2>
+      <button class="primary" id="autoBtn">✨ 자동 보정</button>
+      <div class="sl"><span>밝기</span><input type="range" id="bright" min="-50" max="50" value="0"><output for="bright">0</output></div>
+      <div class="sl"><span>대비</span><input type="range" id="contrast" min="-50" max="50" value="0"><output for="contrast">0</output></div>
+      <div class="sl"><span>채도</span><input type="range" id="sat" min="-50" max="80" value="0"><output for="sat">0</output></div>
+      <div class="sl"><span>따뜻함</span><input type="range" id="warm" min="-50" max="50" value="0"><output for="warm">0</output></div>
+      <div class="sl"><span>선명도</span><input type="range" id="sharp" min="0" max="100" value="0"><output for="sharp">0</output></div>
+      <button id="resetAdj">보정 초기화</button>
+    </div>
+
+    <!-- 4. 배경 -->
+    <div class="step">
+      <h2><span class="n">4</span>배경 바꾸기</h2>
       <p class="hint">배경 라이브러리: 미리 만들어 둔 배경이라 몇 번을 골라도 비용이 들지 않아요.</p>
       <div class="chips" id="bgCats" role="group" aria-label="배경 분류"></div>
       <div class="grid bggrid" id="bgGrid"></div>
@@ -168,9 +173,9 @@ input[type=text],select{font:15px var(--f-ui);padding:9px 10px;border:1px solid 
       </div>
     </div>
 
-    <!-- 4. 템플릿 + 문구 -->
+    <!-- 5. 템플릿 + 문구 -->
     <div class="step">
-      <h2><span class="n">4</span>틀과 문구</h2>
+      <h2><span class="n">5</span>틀과 문구</h2>
       <div class="grid" id="tplGrid"></div>
       <div class="row" role="group" aria-label="크기">
         <button data-size="a4" aria-pressed="true">A4 세로 (출력용)</button>
@@ -307,13 +312,17 @@ function applyAdj(){
   }
   ox.putImageData(id,0,0); processed=out; procKey=key; return out;
 }
-function autoAdjust(){
+function autoAdjust(){ // 누끼가 있으면 음식 부분만 보고 밝기·채도를 맞춤
   if(!baseCanvas) baseCanvas=procSource();
-  const t=mk(80,Math.max(1,Math.round(80*baseCanvas.height/baseCanvas.width))), tx=t.getContext('2d',{willReadFrequently:true});
+  const t=mk(96,Math.max(1,Math.round(96*baseCanvas.height/baseCanvas.width))), tx=t.getContext('2d',{willReadFrequently:true});
   tx.drawImage(baseCanvas,0,0,t.width,t.height); const d=tx.getImageData(0,0,t.width,t.height).data;
-  let L=0,Sa=0,n=0; for(let i=0;i<d.length;i+=4){ const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b); L+=0.299*r+0.587*g+0.114*b; Sa+=mx?(mx-mn)/mx:0; n++; }
-  L/=n; Sa/=n;
-  setAdj({ bright:Math.round(clamp((138-L)/2.2*0.8,-20,35)), contrast:14, sat:Math.round(clamp((0.55-Sa)*80,6,35)), warm:8, sharp:35 });
+  let m=null;
+  if(S.cut==='ai'&&S.aiRaw){ const mc=mk(t.width,t.height), mx2=mc.getContext('2d',{willReadFrequently:true}); mx2.drawImage(buildFinalMask(),0,0,t.width,t.height); m=mx2.getImageData(0,0,t.width,t.height).data; }
+  else if(S.cut==='plate'){ const mc=mk(t.width,t.height), mx2=mc.getContext('2d',{willReadFrequently:true}), r=Math.min(t.width,t.height)*S.plate.size/200;
+    mx2.beginPath(); mx2.arc(t.width/2+S.plate.x/100*t.width,t.height/2+S.plate.y/100*t.height,r,0,7); mx2.fill(); m=mx2.getImageData(0,0,t.width,t.height).data; }
+  let L=0,Sa=0,n=0; for(let i=0;i<d.length;i+=4){ if(m&&m[i+3]<128) continue; const r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b); L+=0.299*r+0.587*g+0.114*b; Sa+=mx?(mx-mn)/mx:0; n++; }
+  if(!n) return; L/=n; Sa/=n;
+  setAdj({ bright:Math.round(clamp((138-L)/2.2*0.8,-20,35)), contrast:14, sat:Math.round(clamp((0.55-Sa)*80,6,35)), warm:8, sharp:35 }); S.adjManual=false;
 }
 function setAdj(o){ Object.assign(S.adj,o); for(const k in S.adj){ $(k).value=S.adj[k]; $(k).nextElementSibling.value=S.adj[k]; } schedule(); }
 
@@ -422,8 +431,8 @@ async function runAI(){
     const t0=performance.now();
     const res=await imglyMod.removeBackground(blob,{ model, progress:(key,c,t)=>{ if(t) st.textContent=`AI 모델 받는 중 ${Math.round(c/t*100)}%`; } });
     S.aiRaw=await loadImg(URL.createObjectURL(res)); S.aiStamp=Date.now(); S.strokes=[]; S.editVer++;
-    st.textContent=`AI 누끼 완료 (${model==='isnet_fp16'?'고화질':'빠름'} 모델, ${((performance.now()-t0)/1000).toFixed(1)}초) · 이 기기에서 처리되어 서버 비용 0원. 아쉬운 부분은 “직접 수정하기”로 다듬으세요.`;
-    S.cut='ai'; syncCut(); schedule();
+    st.textContent=`AI 누끼 완료 (${model==='isnet_fp16'?'고화질':'빠름'} 모델, ${((performance.now()-t0)/1000).toFixed(1)}초) · 음식 부분에 맞춰 자동 보정도 다시 했어요. 아쉬운 테두리는 “직접 수정하기”로 다듬으세요.`;
+    S.cut='ai'; syncCut(); if(!S.adjManual) autoAdjust(); schedule();
   }catch(e){
     console.warn(e); st.className='status err';
     st.textContent='AI 누끼를 불러오지 못했어요. 인터넷 연결을 확인해 주세요. (claude.ai 링크에서는 보안 제한으로 안 돼요) 지금은 “접시 원형으로 오리기”를 써 주세요.';
@@ -658,7 +667,7 @@ function syncCut(){ document.querySelectorAll('[data-cut]').forEach(b=>b.setAttr
 async function setSource(img,blob,name){
   S.src=img; S.srcBlob=blob; S.srcName=name+':'+Date.now(); S.aiRaw=null; S.strokes=[]; baseCanvas=null; processed=null; foodCanvas=null; maskAuto=null; maskFinal=null;
   if(S.cut==='ai') S.cut='plate'; syncCut(); $('aiStatus').className='status';
-  $('aiStatus').textContent=blob?'사진이 올라갔어요. 위의 ✨ AI 누끼를 누르면 음식만 오려내요.':'';
+  $('aiStatus').textContent=blob?'사진이 올라갔어요. 아래 2단계의 ✨ AI 누끼를 누르면 음식만 오려내요.':''; S.adjManual=false;
   autoAdjust(); buildTplGrid();
 }
 async function handleFile(f){
@@ -673,10 +682,10 @@ const drop=$('drop');
 drop.addEventListener('drop',e=>handleFile(e.dataTransfer.files[0]));
 document.addEventListener('paste',e=>{ const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image/')); if(it) handleFile(it.getAsFile()); });
 
-for(const k of ['bright','contrast','sat','warm','sharp']) $(k).addEventListener('input',e=>{ S.adj[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
+for(const k of ['bright','contrast','sat','warm','sharp']) $(k).addEventListener('input',e=>{ S.adjManual=true; S.adj[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
 $('autoBtn').onclick=autoAdjust;
 $('resetAdj').onclick=()=>setAdj({bright:0,contrast:0,sat:0,warm:0,sharp:0});
-document.querySelectorAll('[data-cut]').forEach(b=>b.onclick=()=>{ const c=b.dataset.cut; if(c==='ai'&&!S.aiRaw){ runAI(); return; } S.cut=c; syncCut(); schedule(); });
+document.querySelectorAll('[data-cut]').forEach(b=>b.onclick=()=>{ const c=b.dataset.cut; if(c==='ai'&&!S.aiRaw){ runAI(); return; } S.cut=c; syncCut(); if(!S.adjManual) autoAdjust(); schedule(); });
 for(const [id,k] of [['rEdge','edge'],['rSoft','soft']]) $(id).addEventListener('input',e=>{ S.refine[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
 $('aiModel').addEventListener('change',()=>{ if(S.aiRaw) runAI(); });
 $('openEditor').onclick=openEditor; setupEditor();
