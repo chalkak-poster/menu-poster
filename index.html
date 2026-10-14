@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' data: blob: https://cdn.jsdelivr.net https://staticimgly.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://staticimgly.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' data: blob: https://cdn.jsdelivr.net https://staticimgly.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>찰칵포스터</title>
@@ -294,9 +294,13 @@ async function runAI(){
   const st=$('aiStatus'); st.className='status'; st.textContent='AI 모델을 불러오는 중… (처음 한 번만 약 40MB, 이후엔 바로 처리)';
   document.querySelectorAll('[data-cut]').forEach(b=>b.disabled=true);
   try{
-    if(!imglyMod) imglyMod=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm');
-    let blob=S.srcBlob; if(!blob){ blob=await new Promise(r=>baseCanvas.toBlob(r,'image/png')); }
-    const res=await imglyMod.removeBackground(blob,{ model:'small', progress:(k,c,t)=>{ if(t) st.textContent=`AI 처리 준비 ${Math.round(c/t*100)}%`; } });
+    if(!imglyMod) imglyMod=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
+    // 폰 메모리를 아끼기 위해 긴 변 1024px로 줄여서 처리 (마스크는 원래 크기로 늘려 씀)
+    if(!baseCanvas) baseCanvas=procSource();
+    const k=Math.min(1,1024/Math.max(baseCanvas.width,baseCanvas.height)), sc=mk(Math.round(baseCanvas.width*k),Math.round(baseCanvas.height*k));
+    sc.getContext('2d').drawImage(baseCanvas,0,0,sc.width,sc.height);
+    const blob=await new Promise(r=>sc.toBlob(r,'image/jpeg',.92));
+    const res=await imglyMod.removeBackground(blob,{ model:'isnet_quint8', progress:(k,c,t)=>{ if(t) st.textContent=`AI 처리 준비 ${Math.round(c/t*100)}%`; } });
     const img=await loadImg(URL.createObjectURL(res)); S.aiMask=img; st.textContent='AI 누끼 완료 · 이 기기에서 처리되어 서버 비용이 들지 않았어요.';
     S.cut='ai'; syncCut(); schedule();
   }catch(e){
