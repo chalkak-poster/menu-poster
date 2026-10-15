@@ -121,6 +121,12 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
 #poster{max-width:100%;max-height:calc(100vh - 200px);height:auto;box-shadow:0 18px 40px rgba(0,0,0,.22);border-radius:3px}
 .meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);padding:0 6px}
 .cutbtns{display:flex;flex-direction:column;gap:8px}
+.fontpick{display:flex;flex-direction:column;gap:8px}
+.fp-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px}
+.fontgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fontgrid button{flex-direction:column;gap:2px;padding:10px 6px;border-radius:14px;min-height:64px}
+.fontgrid .fp{font-size:21px;line-height:1.15;font-weight:400;white-space:nowrap;overflow:hidden;max-width:100%}
+.fontgrid small{font-size:11px;font-weight:600;opacity:.75;white-space:nowrap}
 .cut-ai{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:13px 16px;border-radius:16px;text-align:left}
 .cut-ai b{font-size:16px}
 .cut-ai small{font-weight:400;font-size:12.5px;color:var(--muted)}
@@ -399,6 +405,11 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
     <div class="step">
       <h2><span class="n">5</span>틀과 문구</h2>
       <div class="grid" id="tplGrid"></div>
+      <div class="fontpick">
+        <div class="fp-head"><b>메뉴 이름 글꼴</b><span class="hint" id="fontName">템플릿 기본</span></div>
+        <div class="chips" id="fontCats" role="group" aria-label="글꼴 분위기"></div>
+        <div class="fontgrid" id="fontGrid"></div>
+      </div>
       <div class="row" role="group" aria-label="크기">
         <button data-size="a4" aria-pressed="true">A4 세로 (출력용)</button>
         <button data-size="sq" aria-pressed="false">정사각 (인스타)</button>
@@ -465,7 +476,7 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
 const S = {
   src:null, srcBlob:null, srcName:'sample',
   adj:{bright:0,contrast:0,sat:0,warm:0,sharp:0},
-  cut:'plate', plate:{size:86,x:0,y:0}, aiRaw:null, aiStamp:0, aiPlate:false, refine:{edge:1,soft:1}, strokesBy:{ai:[],plate:[]}, editVer:0,
+  cut:'plate', plate:{size:86,x:0,y:0}, font:null, aiRaw:null, aiStamp:0, aiPlate:false, refine:{edge:1,soft:1}, strokesBy:{ai:[],plate:[]}, editVer:0,
   bg:'oak', bgCat:'전체', bgCustom:null, brand:'#c8452d',
   tpl:'classic', size:'a4', bgTouched:false,
 };
@@ -835,6 +846,52 @@ function bgTone(key){ const b=BGS[key]; if(b.tone) return b.tone;
 const F = { display:s=>`${s}px "Black Han Sans", "IBM Plex Sans KR", sans-serif`,
   serif:(s,w=800)=>`${w} ${s}px "Nanum Myeongjo", serif`, body:(s,w=400)=>`${w} ${s}px "Gowun Dodum", "IBM Plex Sans KR", sans-serif`,
   sans:(s,w=700)=>`${w} ${s}px "IBM Plex Sans KR", sans-serif`, pen:s=>`${s}px "Nanum Pen Script", cursive` };
+/* ───────── 메뉴 이름 글꼴 (모두 SIL OFL: 상업용 포스터·인쇄·사이트 탑재 가능) ───────── */
+const FONTS=[
+  {id:'blackhan',fam:'Black Han Sans',w:400,cat:'굵고 힘 있게',name:'블랙한산스',pair:'sans'},
+  {id:'dohyeon',fam:'Do Hyeon',w:400,cat:'굵고 힘 있게',name:'도현',pair:'sans'},
+  {id:'bagel',fam:'Bagel Fat One',w:400,cat:'굵고 힘 있게',name:'베이글팻원',pair:'sans'},
+  {id:'plex',fam:'IBM Plex Sans KR',w:700,cat:'깔끔하게',name:'플렉스 산스',pair:'sans'},
+  {id:'gothica1',fam:'Gothic A1',w:800,cat:'깔끔하게',name:'고딕 A1',pair:'sans'},
+  {id:'sunflower',fam:'Sunflower',w:700,cat:'깔끔하게',name:'선플라워',pair:'sans'},
+  {id:'myeongjo',fam:'Nanum Myeongjo',w:800,cat:'고급스럽게',name:'나눔명조',pair:'serif'},
+  {id:'batang',fam:'Gowun Batang',w:700,cat:'고급스럽게',name:'고운바탕',pair:'serif'},
+  {id:'songmyung',fam:'Song Myung',w:400,cat:'고급스럽게',name:'송명',pair:'serif'},
+  {id:'brush',k:1.35,fam:'Nanum Brush Script',w:400,cat:'붓글씨',name:'나눔붓',pair:'serif'},
+  {id:'dokdo',k:1.4,fam:'East Sea Dokdo',w:400,cat:'붓글씨',name:'동해독도',pair:'serif'},
+  {id:'pen',k:1.3,fam:'Nanum Pen Script',w:400,cat:'손글씨',name:'나눔펜',pair:'round'},
+  {id:'gaegu',fam:'Gaegu',w:700,cat:'손글씨',name:'개구',pair:'round'},
+  {id:'gamja',fam:'Gamja Flower',w:400,cat:'손글씨',name:'감자꽃',pair:'round'},
+  {id:'jua',fam:'Jua',w:400,cat:'귀엽게',name:'주아',pair:'round'},
+  {id:'dongle',k:1.55,fam:'Dongle',w:700,cat:'귀엽게',name:'동글',pair:'round'},
+];
+const PAIR={ sans:(v)=>F.sans(v,400), serif:(v)=>`400 ${v}px "Gowun Batang", "Nanum Myeongjo", serif`, round:(v)=>F.body(v) };
+const curFont=()=>FONTS.find(f=>f.id===S.font);
+const TF=def=>{ const f=curFont(); return f?(v=>`${f.w} ${Math.round(v*(f.k||1))}px "${f.fam}", "IBM Plex Sans KR", sans-serif`):def; }; // 메뉴 이름 (글자가 작게 그려지는 글꼴은 k배)
+const CF=def=>{ const f=curFont(); return f?PAIR[f.pair]:def; };                                                  // 한 줄 소개 (어울리는 글꼴 자동)
+const gfLoaded=new Set();
+function gfLoad(families,text){ // 고른 글꼴만 그때그때 받아옴 (text를 주면 그 글자만)
+  const q=families.map(f=>'family='+encodeURIComponent(f.fam)+(f.w!==400?':wght@'+f.w:'')).join('&')+(text?'&text='+encodeURIComponent(text):'')+'&display=swap';
+  if(gfLoaded.has(q)) return; gfLoaded.add(q);
+  const l=document.createElement('link'); l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?'+q; document.head.append(l);
+}
+const FP_TEXT='맛있는 메뉴';
+let fontCat='전체';
+function buildFontGrid(){
+  const cats=['전체',...new Set(FONTS.map(f=>f.cat))], cw=$('fontCats'); cw.innerHTML='';
+  for(const c of cats){ const b=document.createElement('button'); b.type='button'; b.textContent=c; b.setAttribute('aria-pressed',fontCat===c); b.onclick=()=>{ fontCat=c; buildFontGrid(); }; cw.append(b); }
+  const g=$('fontGrid'); g.innerHTML='';
+  const mkBtn=(f)=>{ const b=document.createElement('button'); b.type='button'; b.setAttribute('aria-pressed',(S.font||null)===(f?f.id:null));
+    const p=document.createElement('span'); p.className='fp'; p.textContent=FP_TEXT; if(f) p.style.font=`${f.w} ${Math.round(21*(f.k||1))}px "${f.fam}", "IBM Plex Sans KR", sans-serif`;
+    const n=document.createElement('small'); n.textContent=f?f.name:'템플릿 기본'; b.append(p,n);
+    b.onclick=()=>{ S.font=f?f.id:null; $('fontName').textContent=f?`${f.name} · ${f.cat}`:'템플릿 기본';
+      if(f){ gfLoad([f]); if(f.pair==='serif') gfLoad([{fam:'Gowun Batang',w:400}]); } buildFontGrid(); schedule(); };
+    return b; };
+  if(fontCat==='전체') g.append(mkBtn(null));
+  FONTS.filter(f=>fontCat==='전체'||f.cat===fontCat).forEach(f=>g.append(mkBtn(f)));
+}
+gfLoad(FONTS.filter(f=>!['Black Han Sans','IBM Plex Sans KR','Nanum Myeongjo','Nanum Pen Script'].includes(f.fam)),FP_TEXT); // 미리보기용 글자만
+
 function scrim(x,W,H,y0,tone,a=.72){ // 복잡한 배경 위 글자 가독성용 그라데이션
   const c=tone==='dark'?'0,0,0':'255,255,255', g=x.createLinearGradient(0,y0,0,H);
   g.addColorStop(0,`rgba(${c},0)`); g.addColorStop(.35,`rgba(${c},${a*.8})`); g.addColorStop(1,`rgba(${c},${a})`); x.fillStyle=g; x.fillRect(0,y0,W,H-y0); }
@@ -863,8 +920,8 @@ const T = {
     if(t.store){ x.font=F.serif(s*3,700); spaced(x,t.store,W/2,s*11,s*.9); x.fillRect(W/2-s*3,s*13.2,s*6,s*.25); }
     drawFood(x,{x:s*9,y:s*16,w:W-s*18,h:H-s*16-s*33},s);
     scrim(x,W,H,H-s*36,tone,.6);
-    const fs=fitFont(x,t.menu,W-s*16,s*8.6,v=>F.serif(v,800)); x.fillStyle=ink; x.fillText(t.menu,W/2,H-s*20.5);
-    if(t.copy){ x.fillStyle=sub; fitFont(x,t.copy,W-s*20,s*3.3,v=>F.body(v)); x.fillText(t.copy,W/2,H-s*15); }
+    const fs=fitFont(x,t.menu,W-s*16,s*8.6,TF(v=>F.serif(v,800))); x.fillStyle=ink; x.fillText(t.menu,W/2,H-s*20.5);
+    if(t.copy){ x.fillStyle=sub; fitFont(x,t.copy,W-s*20,s*3.3,CF(v=>F.body(v))); x.fillText(t.copy,W/2,H-s*15); }
     if(t.price){ x.font=F.sans(s*3.8,700); const pw=x.measureText(t.price).width+s*6; rr(x,W/2-pw/2,H-s*12.2,pw,s*6.2,s*3.1); x.fillStyle=S.brand; x.fill();
       x.fillStyle=lum(S.brand)>.6?'#1f1d1a':'#fff'; x.textBaseline='middle'; x.fillText(t.price,W/2,H-s*9.1+s*.1); x.textBaseline='alphabetic'; }
     badge(x,W-s*15,s*22,s*8,t.badge,S.brand,lum(S.brand)>.6?'#1f1d1a':'#fff');
@@ -874,10 +931,10 @@ const T = {
     x.fillStyle=S.brand; x.beginPath(); x.moveTo(0,0); x.lineTo(W,0); x.lineTo(W,top); x.lineTo(0,top+s*5); x.closePath(); x.fill();
     x.fillStyle=bi; x.textAlign='left'; x.textBaseline='alphabetic';
     if(t.store){ x.globalAlpha=.85; x.font=F.sans(s*2.8,700); spaced(x,t.store,s*6,s*7.5,s*.4,'left'); x.globalAlpha=1; }
-    fitFont(x,t.menu,W-s*12,s*11,F.display); x.fillText(t.menu,s*6,s*19.5);
+    fitFont(x,t.menu,W-s*12,s*11,TF(F.display)); x.fillText(t.menu,s*6,s*19.5);
     drawFood(x,{x:s*5,y:top+s*7,w:W-s*10,h:H-top-s*7-s*23},s);
     scrim(x,W,H,H-s*26,tone,.75);
-    if(t.copy){ fitFont(x,t.copy,W-s*12,s*3.4,v=>F.body(v)); x.fillStyle=ink; x.fillText(t.copy,s*6,H-s*15.5); }
+    if(t.copy){ fitFont(x,t.copy,W-s*12,s*3.4,CF(v=>F.body(v))); x.fillStyle=ink; x.fillText(t.copy,s*6,H-s*15.5); }
     if(t.price){ const fs=fitFont(x,t.price,W*.6,s*9,F.display); x.textAlign='right'; x.fillStyle=ink; x.fillText(t.price,W-s*6,H-s*6.5);
       x.fillStyle=S.brand; x.fillRect(W-s*6-x.measureText(t.price).width,H-s*5,x.measureText(t.price).width,s*1); }
     badge(x,W-s*14,top+s*9,s*9,t.badge,'#ffd23f','#1b1b1b',.2);
@@ -889,8 +946,8 @@ const T = {
     if(t.badge){ x.textAlign='right'; x.font=F.sans(s*2.4,700); const w=x.measureText(t.badge).width; x.strokeStyle=S.brand; x.lineWidth=s*.3; rr(x,W-m-w-s*3,m-s*1.6,w+s*3,s*4.4,s*2.2); x.stroke(); x.fillStyle=S.brand; x.fillText(t.badge,W-m-s*1.5,m+s*1.5); }
     drawFood(x,{x:m,y:m+s*8,w:W-m*2,h:H-m-s*8-s*24},s);
     scrim(x,W,H,H-m-s*20,tone,.8);
-    x.fillStyle=ink; x.textAlign='left'; fitFont(x,t.menu,W*.62,s*6.4,v=>F.sans(v,700)); x.fillText(t.menu,m,H-m-s*7);
-    if(t.copy){ x.fillStyle=sub; fitFont(x,t.copy,W*.62,s*2.9,v=>F.sans(v,400)); x.fillText(t.copy,m,H-m-s*1.5); }
+    x.fillStyle=ink; x.textAlign='left'; fitFont(x,t.menu,W*.62,s*6.4,TF(v=>F.sans(v,700))); x.fillText(t.menu,m,H-m-s*7);
+    if(t.copy){ x.fillStyle=sub; fitFont(x,t.copy,W*.62,s*2.9,CF(v=>F.sans(v,400))); x.fillText(t.copy,m,H-m-s*1.5); }
     if(t.price){ x.textAlign='right'; x.fillStyle=ink; fitFont(x,t.price,W*.3,s*5,v=>F.sans(v,700)); x.fillText(t.price,W-m,H-m-s*1.5); }
     x.fillStyle=ink; x.globalAlpha=.25; x.fillRect(m,H-m-s*14.5,W-m*2,Math.max(1,s*.15)); x.globalAlpha=1;
   }},
@@ -902,8 +959,8 @@ const T = {
     x.fillStyle=ink; x.textAlign='center'; x.textBaseline='alphabetic';
     if(t.store){ x.font=F.pen(s*5.5); x.fillText('~ '+t.store+' ~',W/2,fr+s*8); }
     drawFood(x,{x:fr+s*6,y:fr+s*12,w:W-fr*2-s*12,h:H-fr*2-s*12-s*30},s);
-    fitFont(x,t.menu,W-fr*2-s*8,s*12,F.pen); x.fillText(t.menu,W/2,H-fr-s*17);
-    if(t.copy){ x.globalAlpha=.85; fitFont(x,t.copy,W-fr*2-s*10,s*5.2,F.pen); x.fillText(t.copy,W/2,H-fr-s*10.5); x.globalAlpha=1; }
+    fitFont(x,t.menu,W-fr*2-s*8,s*12,TF(F.pen)); x.fillText(t.menu,W/2,H-fr-s*17);
+    if(t.copy){ x.globalAlpha=.85; fitFont(x,t.copy,W-fr*2-s*10,s*5.2,CF(F.pen)); x.fillText(t.copy,W/2,H-fr-s*10.5); x.globalAlpha=1; }
     if(t.price){ x.fillStyle='#ffd77a'; fitFont(x,t.price,W*.5,s*7.5,F.pen); x.fillText(t.price,W/2,H-fr-s*3.2);
       const pw=x.measureText(t.price).width; x.strokeStyle='#ffd77a'; x.lineWidth=s*.45; x.beginPath(); x.moveTo(W/2-pw/2,H-fr-s*1.8); x.quadraticCurveTo(W/2,H-fr-s*.6,W/2+pw/2,H-fr-s*2.2); x.stroke(); }
     if(t.badge){ x.save(); x.translate(W-fr-s*12,fr+s*16); x.rotate(.18); x.strokeStyle='#ffd77a'; x.lineWidth=s*.4; x.beginPath(); x.ellipse(0,0,s*9,s*5,0,0,7); x.stroke();
@@ -918,7 +975,8 @@ const emptyFields=()=>FIELDS.filter(([id])=>!$(id).value.trim());
 const loadedFonts=new Set();
 async function ensureFonts(t){
   const sample=Object.values(t).join('')+'~0123456789,원'; const specs=['40px "Black Han Sans"','800 40px "Nanum Myeongjo"','700 40px "Nanum Myeongjo"','40px "Gowun Dodum"','700 40px "IBM Plex Sans KR"','400 40px "IBM Plex Sans KR"','600 40px "IBM Plex Sans KR"','40px "Nanum Pen Script"'];
-  const key=sample; if(loadedFonts.has(key)) return; try{ await Promise.race([Promise.all(specs.map(f=>document.fonts.load(f,sample))), new Promise(r=>setTimeout(r,2500))]); }catch(e){} loadedFonts.add(key);
+  const f=curFont(); if(f){ specs.push(`${f.w} 40px "${f.fam}"`); if(f.pair==='serif') specs.push('400 40px "Gowun Batang"'); }
+  const key=sample+'|'+(S.font||''); if(loadedFonts.has(key)) return; try{ await Promise.race([Promise.all(specs.map(f=>document.fonts.load(f,sample))), new Promise(r=>setTimeout(r,2500))]); }catch(e){} loadedFonts.add(key);
 }
 let timer=0, rendering=false, again=false;
 function schedule(){ clearTimeout(timer); timer=setTimeout(render,60); }
@@ -1088,7 +1146,7 @@ if(window.claude?.use){ window.claude.use('downloads').then(d=>{ dl=d; }).catch(
 (async function init(){
   await loadLibrary();
   const sample=makeSample(); await setSource(sample,null,'sample'); S.adj={bright:0,contrast:0,sat:0,warm:0,sharp:0};
-  setAdj({}); autoAdjust(); syncCut(); buildBgGrid(); buildTplGrid();
+  setAdj({}); autoAdjust(); syncCut(); buildBgGrid(); buildTplGrid(); buildFontGrid();
   document.fonts.ready.then(()=>{ buildTplGrid(); schedule(); });
   showView(location.hash==='#make'?'app':'welcome'); // 들어올 때는 항상 서비스 소개부터 (제작 중 새로고침만 제작 화면 유지)
   paintSamples(); schedule();
