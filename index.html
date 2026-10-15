@@ -122,6 +122,11 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
 .meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);padding:0 6px}
 .cutbtns{display:flex;flex-direction:column;gap:8px}
 .fontpick{display:flex;flex-direction:column;gap:8px}
+.xtra{display:flex;flex-direction:column;gap:8px}
+.items{display:flex;flex-direction:column;gap:6px}
+.itemrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,110px) 40px;gap:6px}
+.itemrow button{padding:0;border-radius:10px}
+button.mini{padding:5px 10px;font-size:12.5px;border-radius:999px}
 .fp-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px}
 .fontgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .fontgrid button{flex-direction:column;gap:2px;padding:10px 6px;border-radius:14px;min-height:64px}
@@ -424,6 +429,22 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
           <option value="">없음</option><option selected>NEW</option><option>BEST</option>
           <option>시즌 한정</option><option>오늘만</option><option>사장님 추천</option></select></label>
       </div>
+      <div class="xtra" id="xClaim" hidden><label class="f">강조 문구<input type="text" id="tClaim" placeholder="예: 100% 국내산 닭다리살" maxlength="24"></label></div>
+      <div class="two" id="xStamps" hidden>
+        <label class="f">도장 문구 1<input type="text" id="tStamp1" placeholder="예: 숯불 직화" maxlength="6"></label>
+        <label class="f">도장 문구 2<input type="text" id="tStamp2" placeholder="예: 특제 소스" maxlength="6"></label>
+      </div>
+      <div class="xtra" id="xItems" hidden>
+        <div class="fp-head"><b>가격표</b><span class="hint">최대 6개</span></div>
+        <div id="itemRows" class="items"></div>
+        <button type="button" id="itemAdd">＋ 메뉴 추가</button>
+      </div>
+      <div class="xtra">
+        <div class="fp-head"><b>사진 크기·위치</b><button type="button" class="mini" id="photoReset">원래대로</button></div>
+        <div class="sl"><span>크기</span><input type="range" id="phSize" min="60" max="160" value="100"><output for="phSize">100</output></div>
+        <div class="sl"><span>좌우</span><input type="range" id="phX" min="-30" max="30" value="0"><output for="phX">0</output></div>
+        <div class="sl"><span>위아래</span><input type="range" id="phY" min="-30" max="30" value="0"><output for="phY">0</output></div>
+      </div>
     </div>
   </section>
 
@@ -476,7 +497,7 @@ input[type=text],select{font:15px var(--f-ui);padding:10px 12px;border:1px solid
 const S = {
   src:null, srcBlob:null, srcName:'sample',
   adj:{bright:0,contrast:0,sat:0,warm:0,sharp:0},
-  cut:'plate', plate:{size:86,x:0,y:0}, font:null, aiRaw:null, aiStamp:0, aiPlate:false, refine:{edge:1,soft:1}, strokesBy:{ai:[],plate:[]}, editVer:0,
+  cut:'plate', plate:{size:86,x:0,y:0}, font:null, items:[{n:'',p:''},{n:'',p:''},{n:'',p:''}], photo:{size:100,x:0,y:0}, aiRaw:null, aiStamp:0, aiPlate:false, refine:{edge:1,soft:1}, strokesBy:{ai:[],plate:[]}, editVer:0,
   bg:'oak', bgCat:'전체', bgCustom:null, brand:'#c8452d',
   tpl:'classic', size:'a4', bgTouched:false,
 };
@@ -896,13 +917,14 @@ function scrim(x,W,H,y0,tone,a=.72){ // 복잡한 배경 위 글자 가독성용
   const c=tone==='dark'?'0,0,0':'255,255,255', g=x.createLinearGradient(0,y0,0,H);
   g.addColorStop(0,`rgba(${c},0)`); g.addColorStop(.35,`rgba(${c},${a*.8})`); g.addColorStop(1,`rgba(${c},${a})`); x.fillStyle=g; x.fillRect(0,y0,W,H-y0); }
 function drawFood(x,area,u){
-  const f=getFood(), cut=S.cut!=='none';
+  const f=getFood(), cut=S.cut!=='none', P=S.photo, sc=P.size/100, ox=P.x/100*area.w, oy=P.y/100*area.h;
   x.save();
-  if(cut){ const k=Math.min(area.w/f.width,area.h/f.height), w=f.width*k,h=f.height*k, fx=area.x+(area.w-w)/2, fy=area.y+(area.h-h)/2;
+  if(cut){ area={x:area.x+area.w*(1-sc)/2+ox,y:area.y+area.h*(1-sc)/2+oy,w:area.w*sc,h:area.h*sc}; // 사진 크기·위치 조절
+    const k=Math.min(area.w/f.width,area.h/f.height), w=f.width*k,h=f.height*k, fx=area.x+(area.w-w)/2, fy=area.y+(area.h-h)/2;
     x.shadowColor='rgba(0,0,0,.38)'; x.shadowBlur=u*3.2; x.shadowOffsetY=u*1.6; x.drawImage(f,fx,fy,w,h); }
   else { const r=u*1.6; x.shadowColor='rgba(0,0,0,.3)'; x.shadowBlur=u*2.5; x.shadowOffsetY=u*1.2; rr(x,area.x,area.y,area.w,area.h,r); x.fillStyle='#000'; x.fill();
     x.shadowColor='transparent'; rr(x,area.x,area.y,area.w,area.h,r); x.clip();
-    const k=Math.max(area.w/f.width,area.h/f.height); x.drawImage(f,area.x+(area.w-f.width*k)/2,area.y+(area.h-f.height*k)/2,f.width*k,f.height*k); }
+    const k=Math.max(area.w/f.width,area.h/f.height)*sc; x.drawImage(f,area.x+(area.w-f.width*k)/2+ox,area.y+(area.h-f.height*k)/2+oy,f.width*k,f.height*k); }
   x.restore();
 }
 function badge(x,cx,cy,rad,text,fill,ink,rot=-.18){
@@ -967,11 +989,120 @@ const T = {
       x.fillStyle='#ffd77a'; fitFont(x,t.badge,s*15,s*5,F.pen); x.textBaseline='middle'; x.fillText(t.badge,0,s*.3); x.restore(); }
   }},
 };
+/* ───────── 새 템플릿용 도우미 ───────── */
+function wrapLines(x,text,maxW,fontFn,size){ // 단어 단위 줄바꿈
+  x.font=fontFn(size); const lines=[]; let cur='';
+  for(const w of text.split(/\s+/).filter(Boolean)){ const t=cur?cur+' '+w:w; if(!cur||x.measureText(t).width<=maxW) cur=t; else { lines.push(cur); cur=w; } }
+  if(cur) lines.push(cur); return lines;
+}
+function stamp(x,cx,cy,r,text,fill,ink){ // 동그란 도장 (2줄까지)
+  if(!text) return; x.save(); x.translate(cx,cy); x.rotate(-.08);
+  x.fillStyle=fill; x.beginPath(); for(let i=0;i<60;i++){ const a=i/60*Math.PI*2, k=r*(1+(((i*37)%9)-4)*0.005); x.lineTo(Math.cos(a)*k,Math.sin(a)*k); } x.closePath(); x.fill();
+  x.strokeStyle=ink; x.globalAlpha=.5; x.lineWidth=Math.max(1,r*.045); x.beginPath(); x.arc(0,0,r*.85,0,7); x.stroke(); x.globalAlpha=1;
+  const t=text.replace(/\s+/g,''), h=Math.ceil(t.length/2), lines=t.length<=2?[t]:[t.slice(0,h),t.slice(h)];
+  let fs=r*(lines.length>1?.56:.7); x.font=F.display(fs); while(fs>8&&Math.max(...lines.map(l=>x.measureText(l).width))>r*1.35){ fs--; x.font=F.display(fs); }
+  x.fillStyle=ink; x.textAlign='center'; x.textBaseline='middle'; lines.forEach((l,i)=>x.fillText(l,0,(i-(lines.length-1)/2)*fs*1.08+fs*.04)); x.restore();
+}
+function priceRows(x,rows,x0,x1,y0,rowH,ink,{bullet=false,nameFn=v=>F.sans(v,700),priceFn=v=>F.sans(v,700),fade=false}={}){ // 이름 ······ 가격
+  x.save(); x.fillStyle=ink; x.strokeStyle=ink; x.textBaseline='middle'; if(fade) x.globalAlpha=.45;
+  let fs=rowH*.5; const W=x1-x0;
+  for(const r of rows){ x.font=nameFn(fs); let nw=x.measureText((bullet?'· ':'')+r.n).width; x.font=priceFn(fs); let pw=x.measureText(r.p).width;
+    while(fs>8&&nw+pw+fs*2>W){ fs--; x.font=nameFn(fs); nw=x.measureText((bullet?'· ':'')+r.n).width; x.font=priceFn(fs); pw=x.measureText(r.p).width; } }
+  rows.forEach((r,i)=>{ const y=y0+rowH*(i+.5), nm=(bullet?'· ':'')+r.n;
+    x.textAlign='left'; x.font=nameFn(fs); x.fillText(nm,x0,y); const nw=x.measureText(nm).width;
+    x.textAlign='right'; x.font=priceFn(fs); x.fillText(r.p,x1,y); const pw=x.measureText(r.p).width;
+    const a=x0+nw+fs*.5, b=x1-pw-fs*.5; if(b>a){ x.save(); x.globalAlpha*=.6; x.lineWidth=Math.max(1,fs*.08); x.setLineDash([Math.max(1,fs*.08),fs*.28]); x.lineCap='round';
+      x.beginPath(); x.moveTo(a,y+fs*.12); x.lineTo(b,y+fs*.12); x.stroke(); x.restore(); } });
+  x.restore();
+}
+const ITEM_PH=[{n:'메뉴 이름',p:'가격'},{n:'메뉴 이름',p:'가격'},{n:'메뉴 이름',p:'가격'}];
+
+/* ① 사진 강조형: 위쪽 큰 제목, 아래쪽은 음식이 틀 밖으로 넘칠 만큼 크게 */
+T.photo={name:'사진 강조형',bg:'hanji',uses:[],draw(x,W,H,t,tone){
+  const s=Math.min(W,H)/100, ink=tone==='dark'?'#fbf8f2':'#151311', sub=tone==='dark'?'rgba(251,248,242,.82)':'rgba(21,19,17,.78)';
+  const top=H*(W/H>.9?.31:.27);
+  drawFood(x,{x:-W*.07,y:top+s*1.5,w:W*1.14,h:H-top+H*.07},s);
+  if(S.photo.size>105||S.photo.y<0){ const c=tone==='dark'?'12,12,12':'246,242,234', g=x.createLinearGradient(0,0,0,top+s*8); // 사진을 키우면 제목 뒤를 살짝 덮어 글자 보호
+    g.addColorStop(0,`rgba(${c},.9)`); g.addColorStop(.75,`rgba(${c},.75)`); g.addColorStop(1,`rgba(${c},0)`); x.fillStyle=g; x.fillRect(0,0,W,top+s*8); }
+  let fs=fitFont(x,t.menu,W-s*10,s*16,TF(F.display)); fs=Math.min(fs,top-s*14); x.font=TF(F.display)(fs);
+  const block=fs+(t.copy?s*6.5:0), y0=Math.max(s*8,(top-block)/2+s*2);
+  x.fillStyle=ink; x.textAlign='center'; x.textBaseline='alphabetic';
+  if(t.store){ x.save(); x.globalAlpha=.75; x.font=F.sans(s*2.4,600); spaced(x,t.store,W/2,y0-s*2.2,s*.5); x.restore(); }
+  x.font=TF(F.display)(fs); x.fillText(t.menu,W/2,y0+fs*.88);
+  if(t.copy){ x.fillStyle=sub; fitFont(x,t.copy,W-s*12,s*3.3,CF(v=>F.sans(v,600))); x.fillText(t.copy,W/2,y0+fs+s*5); }
+  if(t.price){ x.font=F.sans(s*4.4,700); const pw=x.measureText(t.price).width+s*7, ph=s*8, px=s*6, py=H-s*6-ph;
+    x.save(); x.shadowColor='rgba(0,0,0,.3)'; x.shadowBlur=s*2; x.shadowOffsetY=s*.6; rr(x,px,py,pw,ph,ph/2); x.fillStyle=S.brand; x.fill(); x.restore();
+    x.fillStyle=lum(S.brand)>.6?'#1a1a1a':'#fff'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(t.price,px+pw/2,py+ph/2+s*.2); }
+  badge(x,W-s*13,top+s*12,s*8.5,t.badge,S.brand,lum(S.brand)>.6?'#1f1d1a':'#fff',.15);
+}};
+
+/* ② 세로 타이틀: 어두운 배경, 오른쪽 세로 제목, 비스듬한 음식, 강조 문구·도장·가격표 */
+T.tower={name:'세로 타이틀',bg:'smoke',uses:['claim','stamps','items'],draw(x,W,H,t,tone){
+  const s=Math.min(W,H)/100, pad=s*6, ink=tone==='dark'?'#ffffff':'#141414', acc=S.brand, onAcc=lum(acc)>.6?'#141414':'#ffffff';
+  const rows=t.items.length?t.items.slice(0,6):[{n:t.menu,p:t.price}];
+  const rowH=s*6.6, tblH=rows.length*rowH+s*5, tblW=Math.min(W*.56,W-pad*2), tblY=H-tblH;
+  x.save(); const fw=W*.74, fh=H*.84; x.translate(W*.36,H*.52); x.rotate(-.12); drawFood(x,{x:-fw/2,y:-fh/2,w:fw,h:fh},s); x.restore();
+  // 오른쪽 세로 제목 (앞 단어는 가로로 작게, 마지막 단어는 세로로 크게)
+  const colW=W*.33, cx=W-pad-colW/2, words=t.menu.trim().split(/\s+/), last=words.pop()||'', head=words.join(' ');
+  x.save(); x.shadowColor='rgba(0,0,0,.35)'; x.shadowBlur=s*1.5; x.fillStyle=ink; x.textAlign='center';
+  let y=pad; const kf=(curFont()&&curFont().k)||1; // 크게 그려지는 글꼴은 실제 글자 크기로 간격 계산
+  if(head){ const hs=fitFont(x,head,colW,s*10/kf,TF(F.display)); x.textBaseline='top'; x.fillText(head,cx,y); y+=hs*kf*1.12; }
+  const chars=[...last], room=tblY-s*4-y;
+  if(chars.length&&chars.length<=6){ let cs=Math.min(colW*.98,room/chars.length/1.02)/kf; x.font=TF(F.display)(cs);
+    const mw=Math.max(...chars.map(c=>x.measureText(c).width)); if(mw>colW){ cs*=colW/mw; x.font=TF(F.display)(cs); }
+    const step=cs*kf*1.02; x.textBaseline='middle'; chars.forEach((c,i)=>x.fillText(c,cx,y+step*(i+.5))); }
+  else if(last){ const ls=wrapLines(x,last,colW,TF(F.display),s*10); x.textBaseline='top'; ls.forEach((l,i)=>{ fitFont(x,l,colW,s*10,TF(F.display)); x.fillText(l,cx,y+i*s*11); }); }
+  x.restore();
+  // 왼쪽 위: 상호, 강조 문구
+  let ly=pad; x.textAlign='left'; x.textBaseline='top';
+  if(t.store){ x.save(); x.globalAlpha=.72; x.fillStyle=ink; x.font=F.sans(s*2.4,600); spaced(x,t.store,pad,ly+s*1.8,s*.4,'left'); x.restore(); ly+=s*5; }
+  if(t.claim){ let cs=s*7; let ls=wrapLines(x,t.claim,W*.42,F.display,cs); while(ls.length>3&&cs>s*3){ cs-=s*.4; ls=wrapLines(x,t.claim,W*.42,F.display,cs); }
+    x.save(); x.fillStyle=acc; x.shadowColor='rgba(0,0,0,.3)'; x.shadowBlur=s; x.font=F.display(cs); ls.forEach((l,i)=>{ fitFont(x,l,W*.42,cs,F.display); x.fillText(l,pad,ly+i*cs*1.12); }); x.restore(); ly+=ls.length*cs*1.12+s*3; }
+  // 도장
+  const r=s*8.2; let sy=Math.max(ly+r+s*2,H*.3);
+  for(const st of [t.stamp1,t.stamp2]){ if(!st) continue; if(sy+r>tblY-s*2) break; stamp(x,pad+r+s*1,sy,r,st,'#f2c230','#171717'); sy+=r*2+s*3; }
+  // 한 줄 소개 (왼쪽 아래)
+  if(t.copy){ x.save(); x.fillStyle=ink; x.globalAlpha=.88; x.textBaseline='alphabetic'; fitFont(x,t.copy,W-tblW-pad*1.6,s*3.1,CF(v=>F.sans(v,600))); x.fillText(t.copy,pad,H-pad*.8); x.restore(); }
+  // 가격표 (오른쪽 아래 색 상자)
+  x.save(); x.shadowColor='rgba(0,0,0,.35)'; x.shadowBlur=s*2; x.fillStyle=acc; x.fillRect(W-tblW,tblY,tblW,tblH); x.restore();
+  priceRows(x,rows,W-tblW+s*4,W-s*4.5,tblY+s*2.5,rowH,onAcc,{bullet:true});
+}};
+
+/* ③ 메뉴판: 위쪽 대표 사진, 아래쪽 메뉴 목록 (최대 6개) */
+T.board={name:'메뉴판',bg:'cream',uses:['items'],draw(x,W,H,t,tone){
+  const s=Math.min(W,H)/100, pad=s*6.5, ink=tone==='dark'?'#f6f2ea':'#1c1a17', sub=tone==='dark'?'rgba(246,242,234,.75)':'rgba(28,26,23,.7)';
+  x.save(); x.strokeStyle=ink; x.globalAlpha=.35; x.lineWidth=Math.max(1,s*.2); x.strokeRect(s*3.2,s*3.2,W-s*6.4,H-s*6.4); x.restore();
+  x.fillStyle=ink; x.textAlign='center'; x.textBaseline='alphabetic';
+  let y=pad+s*1.5;
+  if(t.store){ x.save(); x.globalAlpha=.75; x.font=F.sans(s*2.5,600); spaced(x,t.store,W/2,y+s*1,s*.6); x.restore(); y+=s*3.5; }
+  const ts=fitFont(x,t.menu,W-pad*2,s*9,TF(F.display)); x.fillText(t.menu,W/2,y+ts*.9); y+=ts+s*2.5;
+  const rows=t.items.length?t.items.slice(0,6):ITEM_PH, n=Math.max(rows.length,3), bottom=H-pad-(t.copy?s*6:0), onB=lum(S.brand)>.6?'#1f1d1a':'#fff';
+  if(W/H>.85){ // 정사각·가로: 사진 왼쪽, 목록 오른쪽
+    const mid=W*.5, top=y+s*1;
+    drawFood(x,{x:pad-s*1,y:top,w:mid-pad,h:bottom-top},s);
+    badge(x,mid-s*8,top+s*7,s*7,t.badge,S.brand,onB,.15);
+    const rowH=Math.min(s*9,(bottom-top)/n), y0=top+((bottom-top)-rowH*rows.length)/2;
+    x.save(); x.fillStyle=S.brand; x.fillRect(mid+s*3,y0-s*2.5,s*8,Math.max(2,s*.45)); x.restore();
+    priceRows(x,rows,mid+s*3,W-pad-s*1,y0,rowH,ink,{fade:!t.items.length});
+  } else { // 세로: 사진 위, 목록 아래 (남는 공간 가운데 정렬)
+    const listTop=Math.max(y+s*16,H*(rows.length>4?.53:.58));
+    drawFood(x,{x:pad,y:y,w:W-pad*2,h:listTop-y-s*4},s);
+    badge(x,W-pad-s*7,y+s*7,s*7.5,t.badge,S.brand,onB,.15);
+    const rowH=Math.min(s*9.5,(bottom-listTop)/n), y0=listTop+((bottom-listTop)-rowH*rows.length)*.4;
+    x.save(); x.fillStyle=S.brand; x.fillRect(W/2-s*5,y0-s*1.8,s*10,Math.max(2,s*.45)); x.restore();
+    priceRows(x,rows,pad+s*2,W-pad-s*2,y0+s*1,rowH,ink,{fade:!t.items.length});
+  }
+  if(t.copy){ x.fillStyle=sub; x.textAlign='center'; x.textBaseline='alphabetic'; fitFont(x,t.copy,W-pad*2,s*3,CF(v=>F.sans(v,500))); x.fillText(t.copy,W/2,H-pad); }
+}};
 
 /* ───────── 렌더 ───────── */
 const FIELDS=[['tStore','store','상호명'],['tMenu','menu','메뉴 이름'],['tCopy','copy','한 줄 소개 문구'],['tPrice','price','가격']];
-function texts(){ const t={badge:$('tBadge').value}; for(const [id,k,ph] of FIELDS) t[k]=$(id).value.trim()||ph; return t; } // 빈 칸은 안내 문구로 미리보기
-const emptyFields=()=>FIELDS.filter(([id])=>!$(id).value.trim());
+function texts(){ const t={badge:$('tBadge').value}; for(const [id,k,ph] of FIELDS) t[k]=$(id).value.trim()||ph; // 빈 칸은 안내 문구로 미리보기
+  t.claim=$('tClaim').value.trim(); t.stamp1=$('tStamp1').value.trim(); t.stamp2=$('tStamp2').value.trim();
+  t.items=S.items.map(r=>({n:r.n.trim(),p:r.p.trim()})).filter(r=>r.n||r.p); return t; }
+const uses=k=>(T[S.tpl].uses||[]).includes(k);
+const emptyFields=()=>{ const e=FIELDS.filter(([id])=>!$(id).value.trim());
+  if(S.tpl==='board'&&!texts().items.length) e.push(['item0n','items','가격표']); return e; };
 const loadedFonts=new Set();
 async function ensureFonts(t){
   const sample=Object.values(t).join('')+'~0123456789,원'; const specs=['40px "Black Han Sans"','800 40px "Nanum Myeongjo"','700 40px "Nanum Myeongjo"','40px "Gowun Dodum"','700 40px "IBM Plex Sans KR"','400 40px "IBM Plex Sans KR"','600 40px "IBM Plex Sans KR"','40px "Nanum Pen Script"'];
@@ -1009,9 +1140,9 @@ function buildTplGrid(){
   for(const k in T){ const b=document.createElement('button'); b.className='tile'; b.dataset.tpl=k; b.setAttribute('aria-pressed',S.tpl===k);
     const c=mk(150,150), x=c.getContext('2d'); x.drawImage(getBg(T[k].bg,300,300),0,0,150,150);
     // 축소판: 실제 템플릿을 작은 크기로 렌더
-    const big=mk(300,300), bx=big.getContext('2d'); bx.drawImage(getBg(T[k].bg,300,300),0,0); try{ T[k].draw(bx,300,300,{store:'가게',menu:'메뉴',copy:'',price:'9,000',badge:''},bgTone(T[k].bg)); }catch(e){}
+    const big=mk(300,300), bx=big.getContext('2d'); bx.drawImage(getBg(T[k].bg,300,300),0,0); try{ T[k].draw(bx,300,300,{store:'가게',menu:'메뉴',copy:'',price:'9,000',badge:'',claim:'강조',stamp1:'직화',stamp2:'특제',items:[{n:'메뉴',p:'5,000'},{n:'메뉴',p:'5,000'}]},bgTone(T[k].bg)); }catch(e){}
     x.drawImage(big,0,0,150,150); b.append(c); const sp=document.createElement('span'); sp.textContent=T[k].name; b.append(sp);
-    b.onclick=()=>{ S.tpl=k; if(!S.bgTouched) S.bg=T[k].bg; buildTplGrid(); buildBgGrid(); schedule(); }; g.append(b); }
+    b.onclick=()=>{ S.tpl=k; if(!S.bgTouched) S.bg=T[k].bg; buildTplGrid(); buildBgGrid(); syncTplFields(); schedule(); }; g.append(b); }
 }
 function syncCut(){ document.querySelectorAll('[data-cut]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.cut===S.cut));
   $('plateOpts').hidden=!(S.cut==='plate'||(S.cut==='ai'&&S.aiRaw&&S.aiPlate)); $('aiOpts').hidden=!(S.cut==='ai'&&S.aiRaw); $('editRow').hidden=!hasMask(); }
@@ -1047,7 +1178,23 @@ for(const [id,k] of [['pSize','size'],['pX','x'],['pY','y']]) $(id).addEventList
 $('bgFile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ S.bgCustom=await loadImg(URL.createObjectURL(f)); S.bg='custom'; S.bgTouched=true; buildBgGrid(); schedule(); }catch(err){} };
 $('brand').addEventListener('input',e=>{ S.brand=e.target.value; buildBgGrid(); schedule(); });
 document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{ S.size=b.dataset.size; document.querySelectorAll('[data-size]').forEach(o=>o.setAttribute('aria-pressed',o===b)); schedule(); });
-for(const id of ['tStore','tMenu','tCopy','tPrice','tBadge']) $(id).addEventListener('input',schedule);
+for(const id of ['tStore','tMenu','tCopy','tPrice','tBadge','tClaim','tStamp1','tStamp2']) $(id).addEventListener('input',schedule);
+/* 템플릿별 입력칸 · 가격표 · 사진 크기 */
+function syncTplFields(){ $('xClaim').hidden=!uses('claim'); $('xStamps').hidden=!uses('stamps'); $('xItems').hidden=!uses('items'); }
+function buildItems(){
+  const box=$('itemRows'); box.innerHTML='';
+  S.items.forEach((r,i)=>{ const row=document.createElement('div'); row.className='itemrow';
+    const n=document.createElement('input'); n.type='text'; n.id='item'+i+'n'; n.placeholder='메뉴 이름'; n.maxLength=12; n.value=r.n; n.setAttribute('aria-label',`메뉴 ${i+1} 이름`);
+    const p=document.createElement('input'); p.type='text'; p.placeholder='가격'; p.maxLength=10; p.value=r.p; p.setAttribute('aria-label',`메뉴 ${i+1} 가격`);
+    const d=document.createElement('button'); d.type='button'; d.textContent='✕'; d.setAttribute('aria-label',`메뉴 ${i+1} 지우기`);
+    n.oninput=()=>{ r.n=n.value; schedule(); if(texts().items.length) $('saveWarn').hidden=true; }; p.oninput=()=>{ r.p=p.value; schedule(); };
+    d.onclick=()=>{ S.items.splice(i,1); if(!S.items.length) S.items.push({n:'',p:''}); buildItems(); schedule(); };
+    row.append(n,p,d); box.append(row); });
+  $('itemAdd').hidden=S.items.length>=6;
+}
+$('itemAdd').onclick=()=>{ if(S.items.length<6){ S.items.push({n:'',p:''}); buildItems(); $('item'+(S.items.length-1)+'n').focus(); } };
+for(const [id,k] of [['phSize','size'],['phX','x'],['phY','y']]) $(id).addEventListener('input',e=>{ S.photo[k]=+e.target.value; e.target.nextElementSibling.value=e.target.value; schedule(); });
+$('photoReset').onclick=()=>{ S.photo={size:100,x:0,y:0}; for(const [id,v] of [['phSize',100],['phX',0],['phY',0]]){ $(id).value=v; $(id).nextElementSibling.value=v; } schedule(); };
 
 $('dlBtn').onclick=()=>{ const e=emptyFields(); // 빈 칸이 있으면 한 번 확인
   if(!e.length){ savePoster(); return; }
@@ -1146,7 +1293,7 @@ if(window.claude?.use){ window.claude.use('downloads').then(d=>{ dl=d; }).catch(
 (async function init(){
   await loadLibrary();
   const sample=makeSample(); await setSource(sample,null,'sample'); S.adj={bright:0,contrast:0,sat:0,warm:0,sharp:0};
-  setAdj({}); autoAdjust(); syncCut(); buildBgGrid(); buildTplGrid(); buildFontGrid();
+  setAdj({}); autoAdjust(); syncCut(); buildBgGrid(); buildTplGrid(); buildFontGrid(); buildItems(); syncTplFields();
   document.fonts.ready.then(()=>{ buildTplGrid(); schedule(); });
   showView(location.hash==='#make'?'app':'welcome'); // 들어올 때는 항상 서비스 소개부터 (제작 중 새로고침만 제작 화면 유지)
   paintSamples(); schedule();
